@@ -79,8 +79,7 @@ export const login = async (req: Request, res: Response) => {
         await updateData(userModel, { _id: user._id }, { otp: null, otpExpireTime: null }, {});
         return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.otpSendFailed, {}, error));
       }
-      const responseData = process.env.NODE_ENV === "production" ? {} : { otp, otpExpireTime };
-      return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.otpSent, responseData, {}));
+      return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.otpSent, {}, {}));
     }
     
     const tokenPayload = {_id: user._id,email: user.email,roles: user.roles,type: user.roles,generatedOn: Date.now(),};
@@ -123,8 +122,7 @@ export const forgotPassword = async (req: Request, res: Response) => {
       return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.otpSendFailed, {}, error));
     }
 
-    const responseData = process.env.NODE_ENV === "production" ? {} : { otp, otpExpireTime };
-    return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.otpSent, responseData, {}));
+    return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.otpSent, {}, {}));
   } catch (error) {
     return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.internalServerError, {}, error));
   }
