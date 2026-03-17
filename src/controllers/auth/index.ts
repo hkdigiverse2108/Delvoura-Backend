@@ -3,7 +3,7 @@ import bcryptjs from "bcryptjs";
 import { userModel } from "../../database";
 import {apiResponse,generateHash,generateToken,getOtpExpireTime,getUniqueOtp,HTTP_STATUS,USER_ROLES,} from "../../common";
 import {createData,email_verification_mail,getFirstMatch,password_reset_mail,reqInfo,responseMessage,updateData,} from "../../helper";
-import { forgotPasswordSchema, loginSchema, resetPasswordSchema, signupSchema, verifyOtpSchema } from "../../validation";
+import { changePasswordSchema, forgotPasswordSchema, loginSchema, resetPasswordSchema, signupSchema, verifyOtpSchema } from "../../validation";
 
 const toSafeUser = (user: any) => {
   const userObject = user?.toObject ? user.toObject() : user;
@@ -207,5 +207,40 @@ export const verifyOtp = async (req: Request, res: Response) => {
     return res.status(HTTP_STATUS.OK).json( new apiResponse(HTTP_STATUS.OK,responseMessage.loginSuccess,{ token, user: toSafeUser(user) },{}) );
   } catch (error) {
     return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.internalServerError, {}, error));
+  }
+};
+
+// admin change password
+export const adminChangePassword = async (req: Request, res: Response) => {
+  reqInfo(req);
+  try {
+    const { error, value } = changePasswordSchema.validate(req.body);
+    if (error) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
+    }
+
+    const { oldPassword, newPassword } = value;
+    const authUser: any = (req.headers as any)?.user;
+
+    if (!authUser?._id) {
+      return res.status(HTTP_STATUS.UNAUTHORIZED).json(new apiResponse(HTTP_STATUS.UNAUTHORIZED, responseMessage.invalidToken, {}, {}));
+    }
+
+    const user = await getFirstMatch(userModel, { _id: authUser._id, isDeleted: false }, {}, {});
+    if (!user) {
+      return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("User"), {}, {}));
+    }
+
+    const isPasswordMatch = await bcryptjs.compare(oldPassword, user?.password || "");
+    if (!isPasswordMatch) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.oldPasswordError, {}, {}));
+    }
+
+    const hashedPassword = await generateHash(newPassword);
+    await updateData(userModel, { _id: user._id }, { password: hashedPassword }, {});
+
+    return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.passwordChangeSuccess, {}, {}));
+  } catch (error) {
+    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.passwordChangeError, {}, error));
   }
 };

@@ -38,3 +38,8 @@ export const resetPasswordSchema = Joi.object({
   otp: Joi.alternatives().try(Joi.string(), Joi.number()).required(),
   password: Joi.string().min(6).required(),
 }).options({ abortEarly: true, allowUnknown: true });
+
+export const changePasswordSchema = Joi.object({
+  oldPassword: Joi.string().min(6).required(),
+  newPassword: Joi.string().min(6).required(),
+}).options({ abortEarly: true, allowUnknown: true });
