@@ -53,9 +53,30 @@ export const logger = winston.createLogger({
 });
 
 export const reqInfo = async function (req) {
-  let splitResult = req.header("user-agent").split("(").toString().split(")");
-  let browserName = splitResult[splitResult.length - 1];
-  splitResult = splitResult[0].split(",");
-  let osName = splitResult[1];
-  logger.http(`${req.method} ${req.headers.host}${req.originalUrl} \x1b[33m device os => [${osName}] \x1b[1m\x1b[37mip address => ${req.ip} \n\x1b[36m browser => ${browserName}`);
+  const userAgent = req.header("user-agent") || "";
+
+  let osName = "unknown";
+  let browserName = userAgent || "unknown";
+
+  if (userAgent) {
+    const openIndex = userAgent.indexOf("(");
+    const closeIndex = userAgent.indexOf(")");
+    if (openIndex >= 0 && closeIndex > openIndex) {
+      const inside = userAgent.slice(openIndex + 1, closeIndex);
+      const parts = inside.split(";").map((part) => part.trim()).filter(Boolean);
+      osName = parts[1] || parts[0] || "unknown";
+    }
+
+    const afterParen = userAgent.split(")").pop()?.trim();
+    if (afterParen) {
+      browserName = afterParen;
+    }
+  }
+
+  const forwardedFor = req.headers["x-forwarded-for"];
+  const forwardedIp = Array.isArray(forwardedFor) ? forwardedFor[0] : forwardedFor?.split(",")[0];
+  const ipRaw = forwardedIp?.trim() || req.ip || req.socket?.remoteAddress || "unknown";
+  const ipAddress = ipRaw === "::1" ? "127.0.0.1" : ipRaw;
+
+  logger.http(`${req.method} ${req.headers.host}${req.originalUrl} \x1b[33m device os => [${osName}] \x1b[1m\x1b[37mip address => ${ipAddress} \n\x1b[36m browser => ${browserName}`);
 };

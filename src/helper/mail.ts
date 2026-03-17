@@ -127,3 +127,60 @@ export const email_verification_mail = async (user: any, otp: any) => {
         }
     });
 }
+
+export const password_reset_mail = async (user: any, otp: any) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const fullName = `${user?.firstName ?? "dear"}${user?.lastName ? " " + user.lastName : ""}`;
+            const mailOptions = {
+                from: mailUser,
+                to: user.email,
+                subject: "Password Reset",
+                html: `<html lang="en-US">
+                <head>
+                    <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+                    <title>Password Reset</title>
+                </head>
+                <body style="margin:0; padding:0; background-color:#f2f3f8; font-family: Arial, sans-serif;">
+                    <table cellspacing="0" border="0" cellpadding="0" width="100%" bgcolor="#f2f3f8">
+                        <tr>
+                            <td>
+                                <table style="background-color:#ffffff; max-width:600px; margin:40px auto; border-radius:6px;" width="100%" border="0" align="center" cellpadding="0" cellspacing="0">
+                                    <tr>
+                                        <td style="padding:32px; text-align:left;">
+                                            <h2 style="margin:0 0 16px 0; color:#1e1e2d;">Password Reset</h2>
+                                            <p style="margin:0 0 12px 0; color:#455056; font-size:15px; line-height:22px;">
+                                                Hi ${fullName},
+                                            </p>
+                                            <p style="margin:0 0 12px 0; color:#455056; font-size:15px; line-height:22px;">
+                                                We received a request to reset your password. Use the OTP below to proceed:
+                                            </p>
+                                            <p style="margin:0 0 12px 0; font-size:18px; font-weight:bold; color:#F43939;">
+                                                ${otp}
+                                            </p>
+                                            <p style="margin:0; color:#455056; font-size:14px; line-height:20px;">
+                                                This code will expire in 10 minutes. If you did not request a password reset, you can ignore this email.
+                                            </p>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                </body>
+                </html>`,
+            };
+            await transPorter.sendMail(mailOptions, function (err, data) {
+                if (err) {
+                    console.log(err)
+                    reject(err)
+                } else {
+                    resolve(`Email has been sent to ${user.email}, kindly follow the instructions`)
+                }
+            })
+        } catch (error) {
+            console.log(error)
+            reject(error)
+        }
+    });
+}

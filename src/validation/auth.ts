@@ -28,3 +28,13 @@ export const verifyOtpSchema = Joi.object({
   email: Joi.string().email().required(),
   otp: Joi.alternatives().try(Joi.string(), Joi.number()).required(),
 }).options({ abortEarly: true, allowUnknown: true });
+
+export const forgotPasswordSchema = Joi.object({
+  email: Joi.string().email().required(),
+}).options({ abortEarly: true, allowUnknown: true });
+
+export const resetPasswordSchema = Joi.object({
+  email: Joi.string().email().required(),
+  otp: Joi.alternatives().try(Joi.string(), Joi.number()).required(),
+  password: Joi.string().min(6).required(),
+}).options({ abortEarly: true, allowUnknown: true });
