@@ -38,6 +38,7 @@ export const signup = async (req: Request, res: Response) => {
 
     return res.status(HTTP_STATUS.CREATED).json(new apiResponse(HTTP_STATUS.CREATED,responseMessage.signupSuccess,toSafeUser(createdUser),{}));
   } catch (error) {
+    console.log(error);
     return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR,responseMessage.internalServerError,{},error));
   }
 };
@@ -76,6 +77,7 @@ export const login = async (req: Request, res: Response) => {
       try {
         await email_verification_mail(user, otp);
       } catch (error) {
+        console.log(error);
         await updateData(userModel, { _id: user._id }, { otp: null, otpExpireTime: null }, {});
         return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.otpSendFailed, {}, error));
       }
@@ -87,6 +89,7 @@ export const login = async (req: Request, res: Response) => {
 
     return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK,responseMessage.loginSuccess,{ token, user: toSafeUser(user) },{}) );
   } catch (error) {
+    console.log(error);
     return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR,responseMessage.internalServerError,{},error));
   }
 };
@@ -118,12 +121,14 @@ export const forgotPassword = async (req: Request, res: Response) => {
     try {
       await password_reset_mail(user, otp);
     } catch (error) {
+      console.log(error);
       await updateData(userModel, { _id: user._id }, { otp: null, otpExpireTime: null }, {});
       return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.otpSendFailed, {}, error));
     }
 
     return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.otpSent, {}, {}));
   } catch (error) {
+    console.log(error);
     return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.internalServerError, {}, error));
   }
 };
@@ -161,6 +166,7 @@ export const resetPassword = async (req: Request, res: Response) => {
 
     return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.resetPasswordSuccess, {}, {}));
   } catch (error) {
+    console.log(error);
     return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.resetPasswordError, {}, error));
   }
 };
@@ -204,6 +210,7 @@ export const verifyOtp = async (req: Request, res: Response) => {
 
     return res.status(HTTP_STATUS.OK).json( new apiResponse(HTTP_STATUS.OK,responseMessage.loginSuccess,{ token, user: toSafeUser(user) },{}) );
   } catch (error) {
+    console.log(error);
     return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.internalServerError, {}, error));
   }
 };
@@ -239,6 +246,7 @@ export const adminChangePassword = async (req: Request, res: Response) => {
 
     return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.passwordChangeSuccess, {}, {}));
   } catch (error) {
+    console.log(error);
     return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.passwordChangeError, {}, error));
   }
 };

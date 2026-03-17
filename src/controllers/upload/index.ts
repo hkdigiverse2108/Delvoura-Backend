@@ -1,10 +1,8 @@
 import path from "path";
 import fs from "fs";
-import url from "url"
 import { apiResponse, HTTP_STATUS } from "../../common";
 import { reqInfo, responseMessage } from "../../helper";
 import { deleteImageSchema } from "../../validation";
-import { ok } from "assert";
 
 export const uploadFile = async (req, res) => {
     reqInfo(req)
@@ -31,7 +29,7 @@ export const uploadFile = async (req, res) => {
 
         return res.status(HTTP_STATUS.CREATED).json(new apiResponse(HTTP_STATUS.CREATED, responseMessage?.fileUploadSuccess, { images: uploadedImages }, {}))
     } catch (error) {
-        console.error(error);
+        console.log(error);
         return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage?.internalServerError, {}, error))
     }
 }
@@ -51,7 +49,7 @@ export const getAllImages = async (req, res) => {
 
         return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage?.getDataSuccess("images"), {}, {}))
     } catch (error) {
-        console.error(error);
+        console.log(error);
         return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage?.internalServerError, {}, error))
     }
 }
@@ -83,7 +81,7 @@ export const deleteUploadedFile = async (req, res) => {
 
         return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage?.deleteDataSuccess("images"), {}, {}))
     } catch (error) {
-        console.error(error);
+        console.log(error);
         return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage?.internalServerError, {}, error))
     }
 }

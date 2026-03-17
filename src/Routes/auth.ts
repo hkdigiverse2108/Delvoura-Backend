@@ -1,14 +1,14 @@
 import { Router } from "express";
-import { adminChangePassword, forgotPassword, login, resetPassword, signup, verifyOtp } from "../controllers/auth";
+import { authController } from "../controllers";
 import { adminJwt } from "../helper";
 
-const authRouter = Router();
+const router = Router();
 
-authRouter.post("/signup", signup);
-authRouter.post("/login", login);
-authRouter.post("/forgot-password", forgotPassword);
-authRouter.post("/reset-password", resetPassword);
-authRouter.post("/verify-otp", verifyOtp);
-authRouter.post("/change-password", adminJwt, adminChangePassword);
+router.post("/signup", authController.signup);
+router.post("/login", authController.login);
+router.post("/forgot-password", authController.forgotPassword);
+router.post("/reset-password", authController.resetPassword);
+router.post("/verify-otp", authController.verifyOtp);
+router.post("/change-password", adminJwt, authController.adminChangePassword);
 
-export { authRouter };
+export const authRouter = router;

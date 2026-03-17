@@ -11,7 +11,8 @@
     "deploy": "start deploy.bat",
     "ebs": "start ebs.bat",
     "dist": "sh ./scripts/build.sh",
-    "server": "tsc-watch --outDir ./build --onSuccess \"npm run start -- --mode=http\" --onFailure \"echo ERROR! Compilation Failed\""
+    "server": "tsc-watch --outDir ./build --onSuccess \"npm run start -- --mode=http\" --onFailure \"echo ERROR! Compilation Failed\"",
+    "postman": "ts-node scripts/generatePostman.ts"
   },
   "author": "Pramit Mangukiya",
   "license": "ISC",
@@ -40,7 +41,9 @@
   "devDependencies": {
     "@types/multer": "^2.1.0",
     "@types/node": "^24.10.1",
+    "@types/postman-collection": "^3.5.11",
     "nodemon": "^3.1.11",
+    "postman-collection": "^5.3.0",
     "rimraf": "^6.1.2",
     "ts-node": "^10.9.2",
     "tsc-watch": "^7.2.0",

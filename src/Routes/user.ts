@@ -1,11 +1,11 @@
 import { Router } from "express";
 import { adminJwt } from "../helper";
-import { adminDeleteUser, adminGetUsers, adminUpdateUser } from "../controllers/user";
+import { userController } from "../controllers";
 
-const userRouter = Router();
+const router = Router();
 
-userRouter.get("/", adminJwt, adminGetUsers);
-userRouter.put("/:id", adminJwt, adminUpdateUser);
-userRouter.delete("/:id", adminJwt, adminDeleteUser);
+router.get("/", adminJwt, userController.adminGetUsers);
+router.put("/:id", adminJwt, userController.adminUpdateUser);
+router.delete("/:id", adminJwt, userController.adminDeleteUser);
 
-export { userRouter };
+export const userRouter = router;

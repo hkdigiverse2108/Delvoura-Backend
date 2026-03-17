@@ -13,4 +13,4 @@ export const adminUpdateUserSchema = Joi.object({
   roles: Joi.string().valid(USER_ROLES.ADMIN, USER_ROLES.USER).optional(),
   role: Joi.string().valid(USER_ROLES.ADMIN, USER_ROLES.USER).optional(),
   isActive: Joi.boolean().optional(),
-}).options({ abortEarly: true, allowUnknown: true });
+})

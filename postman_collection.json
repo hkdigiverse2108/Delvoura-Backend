@@ -1,0 +1,581 @@
+{
+  "item": [
+    {
+      "id": "784169c3-fea9-4434-89b8-969bf83edccc",
+      "name": "AUTH",
+      "description": {
+        "content": "Routes for auth",
+        "type": "text/plain"
+      },
+      "item": [
+        {
+          "id": "18569511-8797-4e6a-b882-311af36b877f",
+          "name": "Signup",
+          "request": {
+            "description": {
+              "content": "Controller: signup\nSchema: signupSchema\n\n### Validation Rules\n| Field | Type | Requirement |\n|---|---|---|\n| firstName | string | Required |\n| lastName | string | Required |\n| email | string | Required |\n| password | string | Required |\n| countryCode | string | Optional |\n",
+              "type": "text/markdown"
+            },
+            "url": {
+              "path": [
+                "auth",
+                "signup"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"sample_firstName\",\n  \"lastName\": \"sample_lastName\",\n  \"email\": \"test@example.com\",\n  \"password\": \"Password123!\",\n  \"countryCode\": \"sample_countryCode\"\n}"
+            }
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "id": "f40853b7-6556-4939-a6ef-60033b71970a",
+          "name": "Login",
+          "request": {
+            "description": {
+              "content": "Controller: login\nSchema: loginSchema\n\n### Validation Rules\n| Field | Type | Requirement |\n|---|---|---|\n| email | string | Required |\n| password | string | Required |\n",
+              "type": "text/markdown"
+            },
+            "url": {
+              "path": [
+                "auth",
+                "login"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"Password123!\"\n}"
+            }
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "id": "4eabcb7e-959c-461a-8650-a591717f2bbc",
+          "name": "Forgot Password",
+          "request": {
+            "description": {
+              "content": "Controller: forgotPassword\nSchema: forgotPasswordSchema\n\n### Validation Rules\n| Field | Type | Requirement |\n|---|---|---|\n| email | string | Required |\n",
+              "type": "text/markdown"
+            },
+            "url": {
+              "path": [
+                "auth",
+                "forgot-password"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\"\n}"
+            }
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "id": "e4bbe563-6760-46f0-98f0-a7c252ab4698",
+          "name": "Reset Password",
+          "request": {
+            "description": {
+              "content": "Controller: resetPassword\nSchema: resetPasswordSchema\n\n### Validation Rules\n| Field | Type | Requirement |\n|---|---|---|\n| email | string | Required |\n| otp | alternatives | Required |\n| password | string | Required |\n",
+              "type": "text/markdown"
+            },
+            "url": {
+              "path": [
+                "auth",
+                "reset-password"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"otp\": \"\",\n  \"password\": \"Password123!\"\n}"
+            }
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "id": "9349e3e5-a4c1-4a3f-a2ff-ea7aa23da350",
+          "name": "Verify Otp",
+          "request": {
+            "description": {
+              "content": "Controller: verifyOtp\nSchema: verifyOtpSchema\n\n### Validation Rules\n| Field | Type | Requirement |\n|---|---|---|\n| email | string | Required |\n| otp | alternatives | Required |\n",
+              "type": "text/markdown"
+            },
+            "url": {
+              "path": [
+                "auth",
+                "verify-otp"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"otp\": \"\"\n}"
+            }
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "id": "8cc3be0a-937b-491e-8e8e-3239fd4a83fe",
+          "name": "Change Password",
+          "request": {
+            "description": {
+              "content": "Controller: adminChangePassword\nSchema: changePasswordSchema\n\n### Validation Rules\n| Field | Type | Requirement |\n|---|---|---|\n| oldPassword | string | Required |\n| newPassword | string | Required |\n",
+              "type": "text/markdown"
+            },
+            "url": {
+              "path": [
+                "auth",
+                "change-password"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"oldPassword\": \"sample_oldPassword\",\n  \"newPassword\": \"sample_newPassword\"\n}"
+            }
+          },
+          "response": [],
+          "event": []
+        }
+      ],
+      "event": [],
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{token}}",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "id": "886ad31f-6e4a-4dcc-8b00-e32fa7733d4f",
+      "name": "UPLOAD",
+      "description": {
+        "content": "Routes for upload",
+        "type": "text/plain"
+      },
+      "item": [
+        {
+          "id": "20b3af0c-a2a4-4c19-8359-c7f8553f35d5",
+          "name": "Create Item",
+          "request": {
+            "description": {
+              "content": "Controller: uploadFile",
+              "type": "text/markdown"
+            },
+            "url": {
+              "path": [
+                "upload",
+                ""
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "POST",
+            "body": {}
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "id": "1b86a4e4-9122-43c1-a9af-a37f524ebb46",
+          "name": "Get Item",
+          "request": {
+            "description": {
+              "content": "Controller: getAllImages",
+              "type": "text/markdown"
+            },
+            "url": {
+              "path": [
+                "upload",
+                ""
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "GET",
+            "body": {}
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "id": "0e5c4137-53c9-4a90-995b-cb8b261414ad",
+          "name": "Delete Image",
+          "request": {
+            "description": {
+              "content": "Controller: deleteUploadedFile\nSchema: deleteImageSchema",
+              "type": "text/markdown"
+            },
+            "url": {
+              "path": [
+                "upload",
+                ""
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "DELETE",
+            "body": {}
+          },
+          "response": [],
+          "event": []
+        }
+      ],
+      "event": []
+    },
+    {
+      "id": "2dd275e7-d20e-4558-9362-7adebd1432f8",
+      "name": "USER",
+      "description": {
+        "content": "Routes for user",
+        "type": "text/plain"
+      },
+      "item": [
+        {
+          "id": "fc67ca91-e84f-4669-b4c4-511a5ccddcdc",
+          "name": "Get Item",
+          "request": {
+            "description": {
+              "content": "Controller: adminGetUsers",
+              "type": "text/markdown"
+            },
+            "url": {
+              "path": [
+                "user",
+                ""
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "GET",
+            "body": {}
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "id": "f094c5a4-8d4a-41c8-a5b7-eb710662bc9d",
+          "name": "Admin Update User",
+          "request": {
+            "description": {
+              "content": "Controller: adminUpdateUser\nSchema: adminUpdateUserSchema\n\n### Validation Rules\n| Field | Type | Requirement |\n|---|---|---|\n| name | string | Optional |\n| firstName | string | Optional |\n| lastName | string | Optional |\n| email | string | Optional |\n| password | string | Optional |\n| roles | string | Optional |\n| role | string | Optional |\n| isActive | boolean | Optional |\n",
+              "type": "text/markdown"
+            },
+            "url": {
+              "path": [
+                "user",
+                "{{id}}"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "PUT",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"sample_name\",\n  \"firstName\": \"sample_firstName\",\n  \"lastName\": \"sample_lastName\",\n  \"email\": \"test@example.com\",\n  \"password\": \"Password123!\",\n  \"roles\": \"sample_roles\",\n  \"role\": \"sample_role\",\n  \"isActive\": true\n}"
+            }
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "id": "a06ba372-4a0d-48ca-935e-0341f0c0a2b9",
+          "name": "Delete :id",
+          "request": {
+            "description": {
+              "content": "Controller: adminDeleteUser",
+              "type": "text/markdown"
+            },
+            "url": {
+              "path": [
+                "user",
+                "{{id}}"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "DELETE",
+            "body": {}
+          },
+          "response": [],
+          "event": []
+        }
+      ],
+      "event": [],
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{token}}",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "id": "7232ad01-1c7d-47d6-ab4a-67ac8541ba49",
+      "name": "CATEGORY",
+      "description": {
+        "content": "Routes for category",
+        "type": "text/plain"
+      },
+      "item": [
+        {
+          "id": "68ffa690-d9f4-4b63-951d-73dca662a763",
+          "name": "Create Category",
+          "request": {
+            "description": {
+              "content": "Controller: createCategory\nSchema: createCategorySchema\n\n### Validation Rules\n| Field | Type | Requirement |\n|---|---|---|\n| name | string | Required |\n| isActive | boolean | Optional |\n",
+              "type": "text/markdown"
+            },
+            "url": {
+              "path": [
+                "category",
+                "add"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"sample_name\",\n  \"isActive\": true\n}"
+            }
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "id": "8b6f1d62-1e95-4fdd-8e52-5b9e23b1a5ef",
+          "name": "Get Edit",
+          "request": {
+            "description": {
+              "content": "Controller: getCategories",
+              "type": "text/markdown"
+            },
+            "url": {
+              "path": [
+                "category",
+                "edit"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "GET",
+            "body": {}
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "id": "ed4e4cfe-d111-4242-be44-1b99edc21b78",
+          "name": "Update Category",
+          "request": {
+            "description": {
+              "content": "Controller: updateCategory\nSchema: updateCategorySchema\n\n### Validation Rules\n| Field | Type | Requirement |\n|---|---|---|\n| name | string | Optional |\n| isActive | boolean | Optional |\n",
+              "type": "text/markdown"
+            },
+            "url": {
+              "path": [
+                "category",
+                "{{id}}"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "PUT",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"sample_name\",\n  \"isActive\": true\n}"
+            }
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "id": "c85e719d-cb4a-44f0-a11e-40b937dbb32a",
+          "name": "Delete :id",
+          "request": {
+            "description": {
+              "content": "Controller: deleteCategory",
+              "type": "text/markdown"
+            },
+            "url": {
+              "path": [
+                "category",
+                "{{id}}"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "DELETE",
+            "body": {}
+          },
+          "response": [],
+          "event": []
+        }
+      ],
+      "event": [],
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{token}}",
+            "type": "string"
+          }
+        ]
+      }
+    }
+  ],
+  "event": [],
+  "variable": [
+    {
+      "type": "any",
+      "value": "http://localhost:4444",
+      "key": "baseUrl"
+    },
+    {
+      "type": "any",
+      "value": "",
+      "key": "token"
+    }
+  ],
+  "info": {
+    "_postman_id": "1a0a424c-c4f9-4166-9001-574b11849686",
+    "name": "Delvoura API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": {
+      "content": "Auto generated API collection",
+      "type": "text/plain"
+    }
+  }
+}

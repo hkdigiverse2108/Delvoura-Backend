@@ -1,0 +1,5 @@
+﻿Base paths found: { auth: '/auth', upload: '/upload', user: '/user' }
+Processing router: auth at /auth
+Found 6 routes in auth
+  Processing route: POST /signup
+    Found schema: signupSchema for controller: signup

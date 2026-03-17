@@ -29,6 +29,7 @@ export const createCategory = async (req: Request, res: Response) => {
 
     return res.status(HTTP_STATUS.CREATED).json(new apiResponse(HTTP_STATUS.CREATED, responseMessage.addDataSuccess("Category"), created, {}));
   } catch (error) {
+    console.log(error);
     return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.internalServerError, {}, error));
   }
 };
@@ -38,6 +39,7 @@ export const getCategories = async (_req: Request, res: Response) => {
     const categories = await getData(categoryModel, { isDeleted: false }, {}, {});
     return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.getDataSuccess("Categories"), categories, {}));
   } catch (error) {
+    console.log(error);
     return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.internalServerError, {}, error));
   }
 };
@@ -80,6 +82,7 @@ export const updateCategory = async (req: Request, res: Response) => {
     const updated = await updateData(categoryModel, { _id: id }, updatePayload, {});
     return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.updateDataSuccess("Category"), updated, {}));
   } catch (error) {
+    console.log(error);
     return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.internalServerError, {}, error));
   }
 };
@@ -100,6 +103,7 @@ export const deleteCategory = async (req: Request, res: Response) => {
     await updateData(categoryModel, { _id: id }, { isDeleted: true, isActive: false }, {});
     return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.deleteDataSuccess("Category"), {}, {}));
   } catch (error) {
+    console.log(error);
     return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.internalServerError, {}, error));
   }
 };

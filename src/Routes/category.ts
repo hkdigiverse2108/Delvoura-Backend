@@ -1,12 +1,12 @@
 import { Router } from "express";
 import { adminJwt } from "../helper";
-import { createCategory, deleteCategory, getCategories, updateCategory } from "../controllers/category";
+import { categoryController } from "../controllers";
 
-const categoryRouter = Router();
+const router = Router();
 
-categoryRouter.post("/", adminJwt, createCategory);
-categoryRouter.get("/", adminJwt, getCategories);
-categoryRouter.put("/:id", adminJwt, updateCategory);
-categoryRouter.delete("/:id", adminJwt, deleteCategory);
+router.post("/add", adminJwt, categoryController.createCategory);
+router.get("/edit", adminJwt, categoryController.getCategories);
+router.put("/:id", adminJwt, categoryController.updateCategory);
+router.delete("/:id", adminJwt, categoryController.deleteCategory);
 
-export { categoryRouter };
+export const categoryRouter = router;

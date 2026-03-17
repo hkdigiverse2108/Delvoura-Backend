@@ -1,17 +1,17 @@
 import { Router } from "express";
 import multer from "multer";
-import { deleteUploadedFile, getAllImages, uploadFile } from "../controllers/upload";
+import { uploadController } from "../controllers";
 import { fileFilter, fileStorage } from "../middleware";
 
-const uploadRouter = Router();
+const router = Router();
 
 const upload = multer({
   storage: fileStorage,
   fileFilter,
 });
 
-uploadRouter.post("/", upload.any(), uploadFile);
-uploadRouter.get("/", getAllImages);
-uploadRouter.delete("/", deleteUploadedFile);
+router.post("/", upload.any(), uploadController.uploadFile);
+router.get("/", uploadController.getAllImages);
+router.delete("/", uploadController.deleteUploadedFile);
 
-export { uploadRouter };
+export const uploadRouter = router;
