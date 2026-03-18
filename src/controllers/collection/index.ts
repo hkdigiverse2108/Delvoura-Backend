@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
 import { apiResponse, HTTP_STATUS, isValidObjectId } from "../../common";
-import { categoryModel } from "../../database";
+import { collectionModel } from "../../database";
 import { countData, createData, getDataWithSorting, getFirstMatch, reqInfo, responseMessage, updateData } from "../../helper";
-import { createCategorySchema, updateCategorySchema } from "../../validation";
+import { createCollectionSchema, updateCollectionSchema } from "../../validation";
 
 const normalizeParamId = (raw: string | string[] | undefined) => {
   if (Array.isArray(raw)) return raw[0];
@@ -30,32 +30,35 @@ const parsePositiveInt = (value: any) => {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
 };
 
-export const createCategory = async (req: Request, res: Response) => {
+export const createCollection = async (req: Request, res: Response) => {
   reqInfo(req);
   try {
-    const { error, value } = createCategorySchema.validate(req.body);
+    const { error, value } = createCollectionSchema.validate(req.body);
     if (error) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
     }
 
     const nameValue = value.name.trim();
 
-    const exists = await getFirstMatch(categoryModel,{ name: nameValue, isDeleted: false },{},{});
-
+    const exists = await getFirstMatch(collectionModel, { name: nameValue, isDeleted: false }, {}, {});
     if (exists) {
-      return res.status(HTTP_STATUS.CONFLICT).json(new apiResponse(HTTP_STATUS.CONFLICT, responseMessage.dataAlreadyExist("Category"), {}, {}));
+      return res.status(HTTP_STATUS.CONFLICT).json(new apiResponse(HTTP_STATUS.CONFLICT, responseMessage.dataAlreadyExist("Collection"), {}, {}));
     }
 
-    const created = await createData(categoryModel, {name: nameValue,sActive: typeof value.isActive === "boolean" ? value.isActive : true,isDeleted: false,});
+    const created = await createData(collectionModel, {
+      name: nameValue,
+      isActive: typeof value.isActive === "boolean" ? value.isActive : true,
+      isDeleted: false,
+    });
 
-    return res.status(HTTP_STATUS.CREATED).json(new apiResponse(HTTP_STATUS.CREATED, responseMessage.addDataSuccess("Category"), created, {}));
+    return res.status(HTTP_STATUS.CREATED).json(new apiResponse(HTTP_STATUS.CREATED, responseMessage.addDataSuccess("Collection"), created, {}));
   } catch (error) {
     console.log(error);
     return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.internalServerError, {}, error));
   }
 };
 
-export const getCategories = async (req: Request, res: Response) => {
+export const getCollections = async (req: Request, res: Response) => {
   reqInfo(req);
   try {
     const { page, limit, search, startDate, endDate, activeFilter } = req.query;
@@ -80,44 +83,48 @@ export const getCategories = async (req: Request, res: Response) => {
       options.limit = limitValue;
     }
 
-    const categories = await getDataWithSorting(categoryModel, criteria, {}, options);
-    const totalData = await countData(categoryModel, criteria);
+    const collections = await getDataWithSorting(collectionModel, criteria, {}, options);
+    const totalData = await countData(collectionModel, criteria);
     const totalPages = limitValue ? Math.ceil(totalData / limitValue) || 1 : 1;
 
-    const stateObj = {page,limit,totalPages,};
+    const stateObj = {
+      page,
+      limit,
+      totalPages,
+    };
 
-    return res.status(HTTP_STATUS.OK).json( new apiResponse(HTTP_STATUS.OK, responseMessage.getDataSuccess("Categories"), { category_data: categories, totalData, state: stateObj }, {}));
+    return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.getDataSuccess("Collections"), { collection_data: collections, totalData, state: stateObj }, {}));
   } catch (error) {
     console.log(error);
     return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.internalServerError, {}, error));
   }
 };
 
-export const updateCategory = async (req: Request, res: Response) => {
+export const updateCollection = async (req: Request, res: Response) => {
   reqInfo(req);
   try {
     const id = normalizeParamId(req.params.id);
     if (!id || !isValidObjectId(id)) {
-      return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Category"), {}, {}));
+      return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Collection"), {}, {}));
     }
 
-    const { error, value } = updateCategorySchema.validate(req.body);
+    const { error, value } = updateCollectionSchema.validate(req.body);
     if (error) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
     }
 
-    const existing = await getFirstMatch(categoryModel, { _id: id, isDeleted: false }, {}, {});
+    const existing = await getFirstMatch(collectionModel, { _id: id, isDeleted: false }, {}, {});
     if (!existing) {
-      return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("Category"), {}, {}));
+      return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("Collection"), {}, {}));
     }
 
     const updatePayload: any = {};
 
     if (value.name) {
       const nameValue = value.name.trim();
-      const nameExists = await getFirstMatch(categoryModel,{ name: nameValue, _id: { $ne: id }, isDeleted: false },{},{});
+      const nameExists = await getFirstMatch(collectionModel, { name: nameValue, _id: { $ne: id }, isDeleted: false }, {}, {});
       if (nameExists) {
-        return res.status(HTTP_STATUS.CONFLICT).json(new apiResponse(HTTP_STATUS.CONFLICT, responseMessage.dataAlreadyExist("Category"), {}, {}));
+        return res.status(HTTP_STATUS.CONFLICT).json(new apiResponse(HTTP_STATUS.CONFLICT, responseMessage.dataAlreadyExist("Collection"), {}, {}));
       }
       updatePayload.name = nameValue;
     }
@@ -128,29 +135,29 @@ export const updateCategory = async (req: Request, res: Response) => {
       return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.addDataError, {}, {}));
     }
 
-    const updated = await updateData(categoryModel, { _id: id }, updatePayload, {});
-    return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.updateDataSuccess("Category"), updated, {}));
+    const updated = await updateData(collectionModel, { _id: id }, updatePayload, {});
+    return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.updateDataSuccess("Collection"), updated, {}));
   } catch (error) {
     console.log(error);
     return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.internalServerError, {}, error));
   }
 };
 
-export const deleteCategory = async (req: Request, res: Response) => {
+export const deleteCollection = async (req: Request, res: Response) => {
   reqInfo(req);
   try {
     const id = normalizeParamId(req.params.id);
     if (!id || !isValidObjectId(id)) {
-      return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Category"), {}, {}));
+      return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Collection"), {}, {}));
     }
 
-    const existing = await getFirstMatch(categoryModel, { _id: id, isDeleted: false }, {}, {});
+    const existing = await getFirstMatch(collectionModel, { _id: id, isDeleted: false }, {}, {});
     if (!existing) {
-      return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("Category"), {}, {}));
+      return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("Collection"), {}, {}));
     }
 
-    await updateData(categoryModel, { _id: id }, { isDeleted: true, isActive: false }, {});
-    return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.deleteDataSuccess("Category"), {}, {}));
+    await updateData(collectionModel, { _id: id }, { isDeleted: true, isActive: false }, {});
+    return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.deleteDataSuccess("Collection"), {}, {}));
   } catch (error) {
     console.log(error);
     return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.internalServerError, {}, error));

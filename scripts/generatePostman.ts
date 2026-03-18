@@ -8,6 +8,7 @@ const ROUTES_DIR = path.join(__dirname, '../src/Routes');
 const CONTROLLERS_DIR = path.join(__dirname, '../src/controllers');
 const VALIDATION_DIR = path.join(__dirname, '../src/validation');
 const OUTPUT_FILE = path.join(__dirname, '../postman_collection.json');
+const DEBUG_FILE = path.join(__dirname, '../debug_output.txt');
 
 interface RouteInfo {
   method: string;
@@ -15,6 +16,11 @@ interface RouteInfo {
   controller: string;
   middleware: string[];
 }
+
+const debugLines: string[] = [];
+const debug = (line: string) => {
+  debugLines.push(line);
+};
 
 // ---------------- ROUTE PARSER ----------------
 function parseRoutesFile(filePath: string): RouteInfo[] {
@@ -200,12 +206,18 @@ async function main() {
   collection.variables.add({ key: "token", value: "" });
 
   const basePaths = getBasePaths();
+  debug(`Base paths found: ${JSON.stringify(basePaths)}`);
 
   for (const [routerName, basePath] of Object.entries(basePaths)) {
     const routerFile = path.join(ROUTES_DIR, `${routerName}.ts`);
-    if (!fs.existsSync(routerFile)) continue;
+    if (!fs.existsSync(routerFile)) {
+      debug(`Skipping router ${routerName} because file was not found`);
+      continue;
+    }
 
     const routes = parseRoutesFile(routerFile);
+    debug(`Processing router: ${routerName} at ${basePath}`);
+    debug(`Found ${routes.length} routes in ${routerName}`);
     const hasJwt = routes.some(r => r.middleware.some(m => m.toLowerCase().includes('jwt')));
 
     const folder: ItemGroup<Item> = new ItemGroup({
@@ -229,8 +241,10 @@ async function main() {
     collection.items.add(folder as any);
 
     for (const route of routes) {
+      debug(`  Processing route: ${route.method} ${route.path}`);
       const controllerFile = path.join(CONTROLLERS_DIR, routerName, 'index.ts');
       const schemaName = findSchemaInController(route.controller, controllerFile);
+      if (schemaName) debug(`    Found schema: ${schemaName} for controller: ${route.controller}`);
 
       const validationFile = path.join(VALIDATION_DIR, `${routerName}.ts`);
       const result = schemaName ? generateSampleFromSchema(schemaName, validationFile) : null;
@@ -268,6 +282,7 @@ async function main() {
   }
 
   fs.writeFileSync(OUTPUT_FILE, JSON.stringify(collection.toJSON(), null, 2));
+  fs.writeFileSync(DEBUG_FILE, `${debugLines.join('\n')}\n`);
 
   console.log("✅ Postman collection generated successfully!");
 

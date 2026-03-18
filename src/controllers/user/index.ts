@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { apiResponse, generateHash, HTTP_STATUS, isValidObjectId } from "../../common";
 import { userModel } from "../../database";
-import { getData, getFirstMatch, reqInfo, responseMessage, updateData, } from "../../helper";
+import { countData, getDataWithSorting, getFirstMatch, reqInfo, responseMessage, updateData } from "../../helper";
 import { adminUpdateUserSchema } from "../../validation";
 
 const toSafeUser = (user: any) => {
@@ -15,13 +15,68 @@ const normalizeParamId = (raw: string | string[] | undefined) => {
   return raw;
 };
 
+const applyDateFilter = (criteria: any, startDate?: string, endDate?: string) => {
+  if (!startDate && !endDate) return;
+
+  const createdAt: any = {};
+  if (typeof startDate === "string") {
+    const start = new Date(startDate);
+    if (!Number.isNaN(start.getTime())) createdAt.$gte = start;
+  }
+  if (typeof endDate === "string") {
+    const end = new Date(endDate);
+    if (!Number.isNaN(end.getTime())) createdAt.$lte = end;
+  }
+
+  if (Object.keys(createdAt).length > 0) criteria.createdAt = createdAt;
+};
+
+const parsePositiveInt = (value: any) => {
+  const parsed = parseInt(value, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+};
+
 export const adminGetUsers = async (req: Request, res: Response) => {
   reqInfo(req);
   try {
-    const users = await getData(userModel, { isDeleted: false }, {}, {});
-    const safeUsers = Array.isArray(users) ? users.map(toSafeUser) : [];
+    const { page, limit, search, startDate, endDate, activeFilter } = req.query;
 
-    return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.getDataSuccess("Users"), safeUsers, {}));
+    const criteria: any = { isDeleted: false };
+
+    const searchValue = typeof search === "string" ? search : "";
+    if (searchValue) {
+      criteria.$or = [
+        { firstName: { $regex: searchValue, $options: "si" } },
+        { lastName: { $regex: searchValue, $options: "si" } },
+        { email: { $regex: searchValue, $options: "si" } },
+      ];
+    }
+
+    if (activeFilter !== undefined) criteria.isActive = activeFilter == "true";
+
+    applyDateFilter(criteria, startDate as string, endDate as string);
+
+    const options: any = { sort: { createdAt: -1 } };
+    const pageValue = parsePositiveInt(page);
+    const limitValue = parsePositiveInt(limit);
+
+    if (pageValue && limitValue) {
+      options.skip = (pageValue - 1) * limitValue;
+      options.limit = limitValue;
+    }
+
+    const users = await getDataWithSorting(userModel, criteria, { password: 0 }, options);
+    const safeUsers = Array.isArray(users) ? users.map(toSafeUser) : [];
+    const totalData = await countData(userModel, criteria);
+    const totalPages = limitValue ? Math.ceil(totalData / limitValue) || 1 : 1;
+
+    const stateObj = {
+      page,
+      limit,
+      totalPages,
+    };
+
+    return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.getDataSuccess("Users"), { user_data: safeUsers, totalData, state: stateObj }, {}));
   } catch (error) {
     console.log(error);
     return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.internalServerError, {}, error));

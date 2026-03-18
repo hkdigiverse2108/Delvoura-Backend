@@ -1,7 +1,7 @@
 {
   "item": [
     {
-      "id": "111ffe90-b3cb-4a4c-83fe-35ffe11be6bd",
+      "id": "08c488f6-838d-4edf-8cae-2efeaf2e15e3",
       "name": "AUTH",
       "description": {
         "content": "Routes for auth",
@@ -9,7 +9,7 @@
       },
       "item": [
         {
-          "id": "70b32b30-ac96-4eca-bc3f-7a977f07caa0",
+          "id": "dee344c5-68b7-4441-87bb-d8413550b5dc",
           "name": "Signup",
           "request": {
             "description": {
@@ -43,7 +43,7 @@
           "event": []
         },
         {
-          "id": "979af98b-689b-4f68-8619-d4099462e35e",
+          "id": "53fe21f0-01cb-478f-b5cd-9160b5e291cf",
           "name": "Login",
           "request": {
             "description": {
@@ -77,7 +77,7 @@
           "event": []
         },
         {
-          "id": "c9828b7e-a0c5-49c6-bb3b-2c0f9fa3178e",
+          "id": "ba317c7a-89e8-43ee-ba38-b6f1edaec77a",
           "name": "Forgot Password",
           "request": {
             "description": {
@@ -111,7 +111,7 @@
           "event": []
         },
         {
-          "id": "a39b25a4-ea47-49b8-9ab6-6ae6cb4037c4",
+          "id": "ea799e53-f096-4acc-8c61-01abd867e920",
           "name": "Reset Password",
           "request": {
             "description": {
@@ -145,7 +145,7 @@
           "event": []
         },
         {
-          "id": "0147cdbc-5d5c-4cd5-a1a0-7afff11062a2",
+          "id": "3c57864b-de94-402b-819a-65f61c0509be",
           "name": "Verify Otp",
           "request": {
             "description": {
@@ -179,7 +179,7 @@
           "event": []
         },
         {
-          "id": "ab730758-e2b6-454e-88cc-6234dea36ecb",
+          "id": "2c103dfc-0c46-4722-b6b6-13da08c0f04a",
           "name": "Change Password",
           "request": {
             "description": {
@@ -226,7 +226,7 @@
       }
     },
     {
-      "id": "7d0c85e5-a12e-4bae-aa02-6141f04d6198",
+      "id": "df2822a5-ffda-4c67-88b5-2afb035bc850",
       "name": "UPLOAD",
       "description": {
         "content": "Routes for upload",
@@ -234,7 +234,7 @@
       },
       "item": [
         {
-          "id": "90ff0ddf-47d6-497e-938d-6aa9ea88faad",
+          "id": "4d6fa6ef-78ad-44a0-b219-e40f8da32ada",
           "name": "Create Item",
           "request": {
             "description": {
@@ -259,7 +259,7 @@
           "event": []
         },
         {
-          "id": "61fa0343-40c3-4893-8e65-d73f4033eafa",
+          "id": "f9772c2d-4d85-48df-98ef-208113ccf267",
           "name": "Get Item",
           "request": {
             "description": {
@@ -284,7 +284,7 @@
           "event": []
         },
         {
-          "id": "921f0522-dfed-4d14-a789-b2786d6e4406",
+          "id": "8e9dde35-5b45-45a1-a371-8b04d22764b2",
           "name": "Delete Image",
           "request": {
             "description": {
@@ -312,7 +312,7 @@
       "event": []
     },
     {
-      "id": "4a86e2cc-6f88-477f-bbdd-4ce4166b4c23",
+      "id": "7ed3dbd8-47ba-485a-9fe7-d5386234a4c3",
       "name": "USER",
       "description": {
         "content": "Routes for user",
@@ -320,7 +320,7 @@
       },
       "item": [
         {
-          "id": "9482095b-e0d6-4cd9-8c7e-1e05a053f237",
+          "id": "e8817cb8-f35c-4e41-bb77-db241d30ce25",
           "name": "Get Item",
           "request": {
             "description": {
@@ -345,7 +345,7 @@
           "event": []
         },
         {
-          "id": "522903d4-00b9-4289-982c-7b34c975ec7e",
+          "id": "c1a9fdff-da22-4a27-b7cc-2ec8deb57d37",
           "name": "Admin Update User",
           "request": {
             "description": {
@@ -379,7 +379,7 @@
           "event": []
         },
         {
-          "id": "2894d47f-1b48-458f-9b97-afe2574b12e1",
+          "id": "33ac78a0-ac16-4acd-bcdb-94149eb73730",
           "name": "Delete :id",
           "request": {
             "description": {
@@ -417,7 +417,7 @@
       }
     },
     {
-      "id": "63b2ee26-6af2-4c07-947d-f6c146eeed60",
+      "id": "cc3f0f8c-f014-4e3b-9297-f44c60f21430",
       "name": "CATEGORY",
       "description": {
         "content": "Routes for category",
@@ -425,7 +425,7 @@
       },
       "item": [
         {
-          "id": "05b8d8b4-ca05-4aa3-be55-6231258d4154",
+          "id": "1ba4fcdc-89ac-4259-8d4c-b3a6ccde1e7c",
           "name": "Create Category",
           "request": {
             "description": {
@@ -459,7 +459,7 @@
           "event": []
         },
         {
-          "id": "98c5abfc-9856-4a6e-8476-ec269cb0442a",
+          "id": "5687e64c-7e7d-4526-a1c4-f987f10bf078",
           "name": "Get Edit",
           "request": {
             "description": {
@@ -484,7 +484,7 @@
           "event": []
         },
         {
-          "id": "5d106e32-4a2a-4c1e-8a7c-6e3a5d97dbb8",
+          "id": "77851c76-25e1-400e-a845-c64bc3866ccd",
           "name": "Update Category",
           "request": {
             "description": {
@@ -518,7 +518,7 @@
           "event": []
         },
         {
-          "id": "f966cb79-09d6-4cbe-9f67-8cb84a7c7320",
+          "id": "36947ece-00dd-47c9-914b-6a2ed942860f",
           "name": "Delete :id",
           "request": {
             "description": {
@@ -528,6 +528,284 @@
             "url": {
               "path": [
                 "category",
+                "{{id}}"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "DELETE",
+            "body": {}
+          },
+          "response": [],
+          "event": []
+        }
+      ],
+      "event": [],
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{token}}",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "id": "65441918-ec74-40fe-9da6-5a109a16b2bb",
+      "name": "INGREDIENT",
+      "description": {
+        "content": "Routes for ingredient",
+        "type": "text/plain"
+      },
+      "item": [
+        {
+          "id": "1ac07383-c2ac-4750-84d4-50a7fb421b8c",
+          "name": "Create Ingredient",
+          "request": {
+            "description": {
+              "content": "Controller: createIngredient\nSchema: createIngredientSchema\n\n### Validation Rules\n| Field | Type | Requirement |\n|---|---|---|\n| name | string | Required |\n| isActive | boolean | Optional |\n",
+              "type": "text/markdown"
+            },
+            "url": {
+              "path": [
+                "ingredient",
+                "add"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"sample_name\",\n  \"isActive\": true\n}"
+            }
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "id": "41e14f01-5b66-4572-8b88-8ff2e4a7e23e",
+          "name": "Get Edit",
+          "request": {
+            "description": {
+              "content": "Controller: getIngredients",
+              "type": "text/markdown"
+            },
+            "url": {
+              "path": [
+                "ingredient",
+                "edit"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "GET",
+            "body": {}
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "id": "0353b823-35b2-4711-85fb-90f8e4a4e8df",
+          "name": "Update Ingredient",
+          "request": {
+            "description": {
+              "content": "Controller: updateIngredient\nSchema: updateIngredientSchema\n\n### Validation Rules\n| Field | Type | Requirement |\n|---|---|---|\n| name | string | Optional |\n| isActive | boolean | Optional |\n",
+              "type": "text/markdown"
+            },
+            "url": {
+              "path": [
+                "ingredient",
+                "{{id}}"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "PUT",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"sample_name\",\n  \"isActive\": true\n}"
+            }
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "id": "abf53975-fa9a-496f-81b8-a22538212298",
+          "name": "Delete :id",
+          "request": {
+            "description": {
+              "content": "Controller: deleteIngredient",
+              "type": "text/markdown"
+            },
+            "url": {
+              "path": [
+                "ingredient",
+                "{{id}}"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "DELETE",
+            "body": {}
+          },
+          "response": [],
+          "event": []
+        }
+      ],
+      "event": [],
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{token}}",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "id": "abc896a8-0926-4c19-8777-1b4e69297e97",
+      "name": "COLLECTION",
+      "description": {
+        "content": "Routes for collection",
+        "type": "text/plain"
+      },
+      "item": [
+        {
+          "id": "3e66111f-38b7-4857-a9b2-db8b8cbe3480",
+          "name": "Create Collection",
+          "request": {
+            "description": {
+              "content": "Controller: createCollection\nSchema: createCollectionSchema\n\n### Validation Rules\n| Field | Type | Requirement |\n|---|---|---|\n| name | string | Required |\n| isActive | boolean | Optional |\n",
+              "type": "text/markdown"
+            },
+            "url": {
+              "path": [
+                "collection",
+                "add"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"sample_name\",\n  \"isActive\": true\n}"
+            }
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "id": "65462a12-f4de-4734-b24c-e82230cec14d",
+          "name": "Get Edit",
+          "request": {
+            "description": {
+              "content": "Controller: getCollections",
+              "type": "text/markdown"
+            },
+            "url": {
+              "path": [
+                "collection",
+                "edit"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "GET",
+            "body": {}
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "id": "31a2e360-85c4-4838-95bb-4883e3fd36ee",
+          "name": "Update Collection",
+          "request": {
+            "description": {
+              "content": "Controller: updateCollection\nSchema: updateCollectionSchema\n\n### Validation Rules\n| Field | Type | Requirement |\n|---|---|---|\n| name | string | Optional |\n| isActive | boolean | Optional |\n",
+              "type": "text/markdown"
+            },
+            "url": {
+              "path": [
+                "collection",
+                "{{id}}"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "PUT",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"sample_name\",\n  \"isActive\": true\n}"
+            }
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "id": "376c5381-1f0c-494e-a4ed-c2a363f6d400",
+          "name": "Delete :id",
+          "request": {
+            "description": {
+              "content": "Controller: deleteCollection",
+              "type": "text/markdown"
+            },
+            "url": {
+              "path": [
+                "collection",
                 "{{id}}"
               ],
               "host": [
@@ -570,7 +848,7 @@
     }
   ],
   "info": {
-    "_postman_id": "139390cd-caa2-438f-b4bc-0406324bde4e",
+    "_postman_id": "022d86a5-cefd-4626-90dd-a444449d0390",
     "name": "Delvoura API",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "description": {
