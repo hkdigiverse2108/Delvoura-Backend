@@ -5,7 +5,7 @@ export type User = {
     firstName?: string;
     lastName?: string;
     email: string;
-    phoneNo?: {
+    contact?: {
         countryCode?: string;
         phoneNo?: number;
     };
@@ -21,7 +21,7 @@ const userSchema = new mongoose.Schema<User>({
     firstName: { type: String },
     lastName:{type:String},
     email: { type: String, required: true },
-    phoneNo: {
+    contact: {
         countryCode: { type: String },
         phoneNo: { type: Number },
     },

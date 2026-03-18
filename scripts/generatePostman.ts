@@ -89,45 +89,80 @@ function getBasePaths() {
   return basePaths;
 }
 
-// ---------------- SAMPLE GENERATOR ----------------
+function generateSampleFromSchemaObject(schemaDesc: any, prefix = ""): { sample: any, validation: string } {
+  let sample: any = {};
+  let validation = "";
+
+  if (schemaDesc.type === "object" && schemaDesc.keys) {
+    for (const [key, details] of Object.entries<any>(schemaDesc.keys)) {
+      const isRequired = details.flags?.presence === "required";
+      const fullPath = prefix ? `${prefix}.${key}` : key;
+      validation += `| ${fullPath} | ${details.type} | ${isRequired ? "Required" : "Optional"} |\n`;
+
+      if (details.type === "object") {
+        const nested = generateSampleFromSchemaObject(details, fullPath);
+        sample[key] = nested.sample;
+        validation += nested.validation;
+      } else if (details.type === "array") {
+        sample[key] = [];
+        if (details.items && details.items.length > 0) {
+           const itemSchema = details.items[0];
+           if (itemSchema.type === "object") {
+             const nested = generateSampleFromSchemaObject(itemSchema, `${fullPath}[]`);
+             sample[key].push(nested.sample);
+             validation += nested.validation;
+           } else {
+             sample[key] = [itemSchema.type === "string" ? "sample_string" : 123];
+           }
+        }
+      } else if (details.type === "alternatives") {
+         const objectMatch = details.matches?.find((m: any) => m.schema?.type === "object");
+         if (objectMatch) {
+            const nested = generateSampleFromSchemaObject(objectMatch.schema, fullPath);
+            sample[key] = nested.sample;
+            validation += nested.validation;
+         } else if (details.matches && details.matches.length > 0) {
+            sample[key] = `sample_${details.matches[0].schema?.type || 'alt'}`;
+         }
+      } else if (details.type === "string") {
+        if (key.toLowerCase().includes("email")) sample[key] = "test@example.com";
+        else if (key.toLowerCase().includes("password")) sample[key] = "Password123!";
+        else sample[key] = `sample_${key}`;
+      } else if (details.type === "number") {
+        if (key === "page") sample[key] = 1;
+        else if (key === "limit") sample[key] = 10;
+        else sample[key] = 123;
+      } else if (details.type === "boolean") {
+        sample[key] = true;
+      } else if (details.type === "any") {
+        sample[key] = "sample_any";
+      } else {
+        sample[key] = "";
+      }
+    }
+  }
+
+  return { sample, validation };
+}
+
 function generateSampleFromSchema(schemaName: string, validationFile: string): { sample: any, validation: string } | null {
   if (!fs.existsSync(validationFile)) return null;
 
-  const content = fs.readFileSync(validationFile, 'utf-8');
-
-  const regex = new RegExp(`export const ${schemaName} = Joi\\.object\\({([\\s\\S]+?)}\\)`);
-  const match = regex.exec(content);
-  if (!match) return null;
-
-  const fields = match[1];
-  const sample: any = {};
-  let validationTable = "\n\n### Validation Rules\n| Field | Type | Requirement |\n|---|---|---|\n";
-
-  const lines = fields.split('\n');
-
-  for (const line of lines) {
-    const fieldMatch = line.match(/(\w+)\s*:\s*Joi\.(\w+)/);
-    if (!fieldMatch) continue;
-
-    const key = fieldMatch[1];
-    const type = fieldMatch[2];
-    const required = line.includes('.required()');
-
-    validationTable += `| ${key} | ${type} | ${required ? "Required" : "Optional"} |\n`;
-
-    if (type === 'string') {
-      if (key.includes('email')) sample[key] = "test@example.com";
-      else if (key.includes('password')) sample[key] = "Password123!";
-      else sample[key] = "sample_" + key;
-    } else if (type === 'number') {
-      if (key === 'page') sample[key] = 1;
-      else if (key === 'limit') sample[key] = 10;
-      else sample[key] = 123;
-    } else if (type === 'boolean') sample[key] = true;
-    else sample[key] = "";
+  try {
+    const mod = require(validationFile);
+    if (mod[schemaName] && typeof mod[schemaName].describe === 'function') {
+      const schemaDesc = mod[schemaName].describe();
+      const result = generateSampleFromSchemaObject(schemaDesc);
+      result.validation = "\n\n### Validation Rules\n| Field | Type | Requirement |\n|---|---|---|\n" + result.validation;
+      return result;
+    } else {
+      debug(`Could not find valid schema ${schemaName} in ${validationFile}`);
+    }
+  } catch (e: any) {
+    debug(`Error requiring validation file ${validationFile}: ${e.message}`);
   }
 
-  return { sample, validation: validationTable };
+  return null;
 }
 
 // ---------------- FORMAT TITLE ----------------
@@ -271,10 +306,15 @@ async function main() {
         for (const [key, value] of Object.entries(result.sample)) {
           if (key === 'id' && urlPath.includes('{{id}}')) continue;
 
-          url.addQueryParams([{
-            key: key,
-            value: String(value)
-          }]);
+          if (Array.isArray(value)) {
+            for (const item of value) {
+              url.addQueryParams([{ key: key, value: String(item) }]);
+            }
+          } else if (typeof value === 'object' && value !== null) {
+            url.addQueryParams([{ key: key, value: JSON.stringify(value) }]);
+          } else {
+            url.addQueryParams([{ key: key, value: String(value) }]);
+          }
         }
       }
 

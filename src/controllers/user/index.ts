@@ -55,9 +55,10 @@ export const getUsers = async (req, res) => {
 
     if (search) {
       criteria.$or = [
-        { name: { $regex: search, $options: 'si' } },
+        { firstName: { $regex: search, $options: 'si' } },
+        { lastName: { $regex: search, $options: 'si' } },
         { email: { $regex: search, $options: 'si' } },
-        { phoneNo: { $regex: search, $options: 'si' } },
+        { 'contact.phoneNo': { $regex: search, $options: 'si' } },
       ]
     }
 
