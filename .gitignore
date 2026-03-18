@@ -8,4 +8,5 @@ test.html
 .env
 images
 pdf
-*.postman_collection.json
+debug_output.txt
+postman_collection.json
