@@ -6,7 +6,8 @@ export const createCategorySchema = Joi.object({
 })
 
 export const updateCategorySchema = Joi.object({
-  name: Joi.string().optional(),
+  categoryId: Joi.string().required(),
+  name: Joi.string().required(),
   isActive: Joi.boolean().optional(),
 })
 

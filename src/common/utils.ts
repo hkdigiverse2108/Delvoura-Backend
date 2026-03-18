@@ -54,5 +54,5 @@ export const generateToken = async (data = {}, expiresIn = {}) => {
 };
 
 export const isValidObjectId = (id = "") => {
-  return Types.ObjectId.isValid(id);
+  return Types.ObjectId.isValid(id) ? id : false;
 };
