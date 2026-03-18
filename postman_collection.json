@@ -1,7 +1,7 @@
 {
   "item": [
     {
-      "id": "784169c3-fea9-4434-89b8-969bf83edccc",
+      "id": "111ffe90-b3cb-4a4c-83fe-35ffe11be6bd",
       "name": "AUTH",
       "description": {
         "content": "Routes for auth",
@@ -9,7 +9,7 @@
       },
       "item": [
         {
-          "id": "18569511-8797-4e6a-b882-311af36b877f",
+          "id": "70b32b30-ac96-4eca-bc3f-7a977f07caa0",
           "name": "Signup",
           "request": {
             "description": {
@@ -43,7 +43,7 @@
           "event": []
         },
         {
-          "id": "f40853b7-6556-4939-a6ef-60033b71970a",
+          "id": "979af98b-689b-4f68-8619-d4099462e35e",
           "name": "Login",
           "request": {
             "description": {
@@ -77,7 +77,7 @@
           "event": []
         },
         {
-          "id": "4eabcb7e-959c-461a-8650-a591717f2bbc",
+          "id": "c9828b7e-a0c5-49c6-bb3b-2c0f9fa3178e",
           "name": "Forgot Password",
           "request": {
             "description": {
@@ -111,7 +111,7 @@
           "event": []
         },
         {
-          "id": "e4bbe563-6760-46f0-98f0-a7c252ab4698",
+          "id": "a39b25a4-ea47-49b8-9ab6-6ae6cb4037c4",
           "name": "Reset Password",
           "request": {
             "description": {
@@ -145,7 +145,7 @@
           "event": []
         },
         {
-          "id": "9349e3e5-a4c1-4a3f-a2ff-ea7aa23da350",
+          "id": "0147cdbc-5d5c-4cd5-a1a0-7afff11062a2",
           "name": "Verify Otp",
           "request": {
             "description": {
@@ -179,7 +179,7 @@
           "event": []
         },
         {
-          "id": "8cc3be0a-937b-491e-8e8e-3239fd4a83fe",
+          "id": "ab730758-e2b6-454e-88cc-6234dea36ecb",
           "name": "Change Password",
           "request": {
             "description": {
@@ -226,7 +226,7 @@
       }
     },
     {
-      "id": "886ad31f-6e4a-4dcc-8b00-e32fa7733d4f",
+      "id": "7d0c85e5-a12e-4bae-aa02-6141f04d6198",
       "name": "UPLOAD",
       "description": {
         "content": "Routes for upload",
@@ -234,7 +234,7 @@
       },
       "item": [
         {
-          "id": "20b3af0c-a2a4-4c19-8359-c7f8553f35d5",
+          "id": "90ff0ddf-47d6-497e-938d-6aa9ea88faad",
           "name": "Create Item",
           "request": {
             "description": {
@@ -259,7 +259,7 @@
           "event": []
         },
         {
-          "id": "1b86a4e4-9122-43c1-a9af-a37f524ebb46",
+          "id": "61fa0343-40c3-4893-8e65-d73f4033eafa",
           "name": "Get Item",
           "request": {
             "description": {
@@ -284,7 +284,7 @@
           "event": []
         },
         {
-          "id": "0e5c4137-53c9-4a90-995b-cb8b261414ad",
+          "id": "921f0522-dfed-4d14-a789-b2786d6e4406",
           "name": "Delete Image",
           "request": {
             "description": {
@@ -312,7 +312,7 @@
       "event": []
     },
     {
-      "id": "2dd275e7-d20e-4558-9362-7adebd1432f8",
+      "id": "4a86e2cc-6f88-477f-bbdd-4ce4166b4c23",
       "name": "USER",
       "description": {
         "content": "Routes for user",
@@ -320,7 +320,7 @@
       },
       "item": [
         {
-          "id": "fc67ca91-e84f-4669-b4c4-511a5ccddcdc",
+          "id": "9482095b-e0d6-4cd9-8c7e-1e05a053f237",
           "name": "Get Item",
           "request": {
             "description": {
@@ -345,7 +345,7 @@
           "event": []
         },
         {
-          "id": "f094c5a4-8d4a-41c8-a5b7-eb710662bc9d",
+          "id": "522903d4-00b9-4289-982c-7b34c975ec7e",
           "name": "Admin Update User",
           "request": {
             "description": {
@@ -379,7 +379,7 @@
           "event": []
         },
         {
-          "id": "a06ba372-4a0d-48ca-935e-0341f0c0a2b9",
+          "id": "2894d47f-1b48-458f-9b97-afe2574b12e1",
           "name": "Delete :id",
           "request": {
             "description": {
@@ -417,7 +417,7 @@
       }
     },
     {
-      "id": "7232ad01-1c7d-47d6-ab4a-67ac8541ba49",
+      "id": "63b2ee26-6af2-4c07-947d-f6c146eeed60",
       "name": "CATEGORY",
       "description": {
         "content": "Routes for category",
@@ -425,7 +425,7 @@
       },
       "item": [
         {
-          "id": "68ffa690-d9f4-4b63-951d-73dca662a763",
+          "id": "05b8d8b4-ca05-4aa3-be55-6231258d4154",
           "name": "Create Category",
           "request": {
             "description": {
@@ -459,7 +459,7 @@
           "event": []
         },
         {
-          "id": "8b6f1d62-1e95-4fdd-8e52-5b9e23b1a5ef",
+          "id": "98c5abfc-9856-4a6e-8476-ec269cb0442a",
           "name": "Get Edit",
           "request": {
             "description": {
@@ -484,7 +484,7 @@
           "event": []
         },
         {
-          "id": "ed4e4cfe-d111-4242-be44-1b99edc21b78",
+          "id": "5d106e32-4a2a-4c1e-8a7c-6e3a5d97dbb8",
           "name": "Update Category",
           "request": {
             "description": {
@@ -518,7 +518,7 @@
           "event": []
         },
         {
-          "id": "c85e719d-cb4a-44f0-a11e-40b937dbb32a",
+          "id": "f966cb79-09d6-4cbe-9f67-8cb84a7c7320",
           "name": "Delete :id",
           "request": {
             "description": {
@@ -570,7 +570,7 @@
     }
   ],
   "info": {
-    "_postman_id": "1a0a424c-c4f9-4166-9001-574b11849686",
+    "_postman_id": "139390cd-caa2-438f-b4bc-0406324bde4e",
     "name": "Delvoura API",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "description": {

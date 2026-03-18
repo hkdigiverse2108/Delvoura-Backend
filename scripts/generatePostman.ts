@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import 'dotenv/config';
+import axios from 'axios';
 import { Collection, Item, ItemGroup, HeaderDefinition } from 'postman-collection';
 
 const ROUTES_DIR = path.join(__dirname, '../src/Routes');
@@ -144,6 +145,43 @@ function generateReadableName(route: RouteInfo, schemaName?: string): string {
   return `${action} ${lastPart.charAt(0).toUpperCase() + lastPart.slice(1)}`;
 }
 
+// ---------------- SYNC TO POSTMAN ----------------
+async function syncToPostman(collectionJSON: any) {
+  const apiKey = process.env.POSTMAN_API_KEY;
+  const collectionUid = process.env.POSTMAN_COLLECTION_UID;
+
+  if (!apiKey || !collectionUid) {
+    console.log("\n⚠️  Postman API Key or Collection UID missing in .env. Skipping cloud sync.");
+    console.log("💡 To enable sync, add POSTMAN_API_KEY and POSTMAN_COLLECTION_UID to your .env file.");
+    return;
+  }
+
+  try {
+    console.log(`\nSyncing to Postman Cloud (UID: ${collectionUid})...`);
+    
+    await axios.put(
+      `https://api.getpostman.com/collections/${collectionUid}`,
+      { collection: collectionJSON },
+      {
+        headers: {
+          'X-Api-Key': apiKey,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    console.log("🚀 Postman collection synced successfully with Postman Cloud!");
+  } catch (error: any) {
+    console.error("❌ Failed to sync with Postman API:");
+    if (error.response) {
+      console.error(`   Status: ${error.response.status}`);
+      console.error(`   Message: ${JSON.stringify(error.response.data)}`);
+    } else {
+      console.error(`   Error: ${error.message}`);
+    }
+  }
+}
+
 // ---------------- MAIN ----------------
 async function main() {
   const collection = new Collection({
@@ -232,6 +270,9 @@ async function main() {
   fs.writeFileSync(OUTPUT_FILE, JSON.stringify(collection.toJSON(), null, 2));
 
   console.log("✅ Postman collection generated successfully!");
+
+  // ✅ Sync to Postman Cloud if configured
+  await syncToPostman(collection.toJSON());
 }
 
 main().catch(console.error);
