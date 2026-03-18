@@ -25,7 +25,7 @@ export const findOneAndPopulate = async (modelName, criteria, projection, option
 }
 
 export const countData = async (modelName, criteria) => {
-    return modelName.count(criteria);
+    return modelName.countDocuments(criteria);
 }
 
 export const createData = async (modelName, objToSave) => {

@@ -1,4 +1,4 @@
-import { apiResponse, HTTP_STATUS, isValidObjectId } from "../../common";
+import { apiResponse, HTTP_STATUS, isValidObjectId, parseDateRange } from "../../common";
 import { ingredientModel } from "../../database";
 import { countData, createData, getDataWithSorting, getFirstMatch, reqInfo, responseMessage, updateData } from "../../helper";
 import { createIngredientSchema, deleteIngredientSchema, getIngredientsSchema, updateIngredientSchema } from "../../validation";
@@ -6,7 +6,7 @@ import { createIngredientSchema, deleteIngredientSchema, getIngredientsSchema, u
 export const createIngredient = async (req, res) => {
   reqInfo(req);
   try {
-    const { error, value } = createIngredientSchema.validate(req.body);
+    const { error, value } = createIngredientSchema.validate(req.body || {});
     if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
 
     const nameValue = value.name.trim();
@@ -26,7 +26,7 @@ export const createIngredient = async (req, res) => {
 export const updateIngredient = async (req, res) => {
   reqInfo(req);
   try {
-    const { error, value } = updateIngredientSchema.validate(req.body);
+    const { error, value } = updateIngredientSchema.validate(req.body || {});
     if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
 
     const existing = await getFirstMatch(ingredientModel, { _id: isValidObjectId(value.ingredientId), isDeleted: false }, {}, {});
@@ -77,8 +77,12 @@ export const getIngredients = async (req, res) => {
       ]
     }
 
-    if (startDateFilter && endDateFilter) {
-      criteria.createdAt = { $gte: new Date(startDateFilter), $lte: new Date(endDateFilter) }
+    const dateRange = parseDateRange(startDateFilter, endDateFilter);
+    if (startDateFilter && endDateFilter && !dateRange) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.customMessage("Invalid date filter"), {}, {}));
+    }
+    if (dateRange) {
+      criteria.createdAt = { $gte: dateRange.startDate, $lte: dateRange.endDate };
     }
 
     if (page && limit) {
@@ -105,3 +109,6 @@ export const getIngredients = async (req, res) => {
     return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.internalServerError, {}, error));
   }
 };
+
+
+

@@ -1,4 +1,4 @@
-import { apiResponse, generateHash, HTTP_STATUS, isValidObjectId, USER_ROLES } from "../../common";
+import { apiResponse, generateHash, HTTP_STATUS, isValidObjectId, parseDateRange, USER_ROLES } from "../../common";
 import { userModel } from "../../database";
 import { countData, getDataWithSorting, getFirstMatch, reqInfo, responseMessage, updateData, } from "../../helper";
 import { deleteUserSchema, getUsersSchema, updateUserSchema } from "../../validation";
@@ -6,7 +6,7 @@ import { deleteUserSchema, getUsersSchema, updateUserSchema } from "../../valida
 export const updateUser = async (req, res) => {
   reqInfo(req);
   try {
-    const { error, value } = updateUserSchema.validate(req.body);
+    const { error, value } = updateUserSchema.validate(req.body || {});
     if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
 
     let isExist = await getFirstMatch(userModel, { _id: isValidObjectId(value.userId), isDeleted: false }, {}, {});
@@ -62,8 +62,12 @@ export const getUsers = async (req, res) => {
       ]
     }
 
-    if (startDateFilter && endDateFilter) {
-      criteria.createdAt = { $gte: new Date(startDateFilter), $lte: new Date(endDateFilter) }
+    const dateRange = parseDateRange(startDateFilter, endDateFilter);
+    if (startDateFilter && endDateFilter && !dateRange) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.customMessage("Invalid date filter"), {}, {}));
+    }
+    if (dateRange) {
+      criteria.createdAt = { $gte: dateRange.startDate, $lte: dateRange.endDate };
     }
 
     if (page && limit) {
@@ -90,3 +94,5 @@ export const getUsers = async (req, res) => {
     return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.internalServerError, {}, error));
   }
 };
+
+

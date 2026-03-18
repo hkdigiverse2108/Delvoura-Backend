@@ -7,7 +7,7 @@ import { deleteImageSchema, uploadImageSchema } from "../../validation";
 export const uploadFile = async (req, res) => {
     reqInfo(req)
     try {
-        const { error, value } = uploadImageSchema.validate(req.body);
+        const { error, value } = uploadImageSchema.validate(req.body || {});
         if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error?.details[0].message, {}, {}))
 
         const hasImage = (value?.files && value?.files?.length > 0) || value?.file;
@@ -55,7 +55,7 @@ export const getAllImages = async (req, res) => {
 export const deleteUploadedFile = async (req, res) => {
     reqInfo(req)
     try {
-        const { error, value } = deleteImageSchema.validate(req.body);
+        const { error, value } = deleteImageSchema.validate(req.body || {});
         if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error?.details[0].message, {}, {}))
         
         const { fileUrl } = value;

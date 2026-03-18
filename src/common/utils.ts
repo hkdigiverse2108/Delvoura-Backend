@@ -56,3 +56,14 @@ export const generateToken = async (data = {}, expiresIn = {}) => {
 export const isValidObjectId = (id = "") => {
   return Types.ObjectId.isValid(id) ? id : false;
 };
+
+export const parseDateRange = (start?: any, end?: any) => {
+  if (!start || !end) return null;
+
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+
+  if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) return null;
+
+  return { startDate, endDate };
+};

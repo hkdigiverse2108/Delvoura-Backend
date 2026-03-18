@@ -1,4 +1,4 @@
-import { apiResponse, HTTP_STATUS, isValidObjectId } from "../../common";
+import { apiResponse, HTTP_STATUS, isValidObjectId, parseDateRange } from "../../common";
 import { collectionModel } from "../../database";
 import { countData, createData, getDataWithSorting, getFirstMatch, reqInfo, responseMessage, updateData } from "../../helper";
 import { createCollectionSchema, deleteCollectionSchema, getCollectionsSchema, updateCollectionSchema } from "../../validation";
@@ -6,7 +6,7 @@ import { createCollectionSchema, deleteCollectionSchema, getCollectionsSchema, u
 export const createCollection = async (req, res) => {
   reqInfo(req);
   try {
-    const { error, value } = createCollectionSchema.validate(req.body);
+    const { error, value } = createCollectionSchema.validate(req.body || {});
     if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
 
     const nameValue = value.name.trim();
@@ -26,7 +26,7 @@ export const createCollection = async (req, res) => {
 export const updateCollection = async (req, res) => {
   reqInfo(req);
   try {
-    const { error, value } = updateCollectionSchema.validate(req.body);
+    const { error, value } = updateCollectionSchema.validate(req.body || {});
     if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
 
     const existing = await getFirstMatch(collectionModel, { _id: isValidObjectId(value.collectionId), isDeleted: false }, {}, {});
@@ -71,20 +71,17 @@ export const getCollections = async (req, res) => {
     const { page, limit, search, startDateFilter, endDateFilter } = value
     let criteria: any = { isDeleted: false }, options: any = { lean: true }
 
-    if (search) {
-      criteria.$or = [
-        { name: { $regex: search, $options: 'si' } },
-      ]
+    if (search) {criteria.$or = [{ name: { $regex: search, $options: 'si' } },]}
+
+    const dateRange = parseDateRange(startDateFilter, endDateFilter);
+    if (startDateFilter && endDateFilter && !dateRange) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.customMessage("Invalid date filter"), {}, {}));
+    }
+    if (dateRange) {
+      criteria.createdAt = { $gte: dateRange.startDate, $lte: dateRange.endDate };
     }
 
-    if (startDateFilter && endDateFilter) {
-      criteria.createdAt = { $gte: new Date(startDateFilter), $lte: new Date(endDateFilter) }
-    }
-
-    if (page && limit) {
-      options.page = parseInt(page)
-      options.limit = parseInt(limit)
-    }
+    if (page && limit) {options.page = parseInt(page) ,options.limit = parseInt(limit)}
 
     const response = await getDataWithSorting(collectionModel, criteria, {}, options)
     const totalCount = await countData(collectionModel, criteria)
@@ -105,3 +102,6 @@ export const getCollections = async (req, res) => {
     return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.internalServerError, {}, error));
   }
 };
+
+
+

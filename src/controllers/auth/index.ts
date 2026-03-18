@@ -15,7 +15,7 @@ const toSafeUser = (user: any) => {
 export const signup = async (req: Request, res: Response) => {
   reqInfo(req);
   try {
-    const { error, value } = signupSchema.validate(req.body);
+    const { error, value } = signupSchema.validate(req.body || {});
     if (error) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
     }
@@ -47,7 +47,7 @@ export const signup = async (req: Request, res: Response) => {
 export const login = async (req: Request, res: Response) => {
   reqInfo(req);
   try {
-    const { error, value } = loginSchema.validate(req.body);
+    const { error, value } = loginSchema.validate(req.body || {});
     if (error) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
     }
@@ -98,7 +98,7 @@ export const login = async (req: Request, res: Response) => {
 export const forgotPassword = async (req: Request, res: Response) => {
   reqInfo(req);
   try {
-    const { error, value } = forgotPasswordSchema.validate(req.body);
+    const { error, value } = forgotPasswordSchema.validate(req.body || {});
     if (error) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
     }
@@ -137,7 +137,7 @@ export const forgotPassword = async (req: Request, res: Response) => {
 export const resetPassword = async (req: Request, res: Response) => {
   reqInfo(req);
   try {
-    const { error, value } = resetPasswordSchema.validate(req.body);
+    const { error, value } = resetPasswordSchema.validate(req.body || {});
     if (error) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
     }
@@ -175,7 +175,7 @@ export const resetPassword = async (req: Request, res: Response) => {
 export const verifyOtp = async (req: Request, res: Response) => {
   reqInfo(req);
   try {
-    const { error, value } = verifyOtpSchema.validate(req.body);
+    const { error, value } = verifyOtpSchema.validate(req.body || {});
     if (error) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
     }
@@ -219,7 +219,7 @@ export const verifyOtp = async (req: Request, res: Response) => {
 export const adminChangePassword = async (req: Request, res: Response) => {
   reqInfo(req);
   try {
-    const { error, value } = changePasswordSchema.validate(req.body);
+    const { error, value } = changePasswordSchema.validate(req.body || {});
     if (error) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
     }
@@ -250,3 +250,4 @@ export const adminChangePassword = async (req: Request, res: Response) => {
     return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.passwordChangeError, {}, error));
   }
 };
+
