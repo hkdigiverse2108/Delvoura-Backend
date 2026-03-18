@@ -9,9 +9,10 @@ export const createProductSchema = Joi.object({
   mrp: Joi.number().optional(),
   season: Joi.string().valid(...Object.values(PRODUCT_SEASONS)).optional(),
   gender: Joi.string().valid(...Object.values(PRODUCT_GENDERS)).optional(),
-  collection: Joi.string().optional(),
+  categoryId: Joi.string().optional(),
+  collectionId: Joi.string().optional(),
   variant: Joi.string().optional(),
-  ingredient: Joi.string().optional(),
+  ingredientId: Joi.string().optional(),
   description: Joi.string().optional(),
   isTrending: Joi.boolean().optional(),
   brandName: Joi.string().optional(),
@@ -19,7 +20,7 @@ export const createProductSchema = Joi.object({
   manufacturerName: Joi.string().optional(),
   manufacturerInfo: Joi.string().optional(),
   isActive: Joi.boolean().optional(),
-}).required();
+});
 
 export const updateProductSchema = Joi.object({
   productId: Joi.string().required(),
@@ -30,9 +31,10 @@ export const updateProductSchema = Joi.object({
   mrp: Joi.number().optional(),
   season: Joi.string().valid(...Object.values(PRODUCT_SEASONS)).optional(),
   gender: Joi.string().valid(...Object.values(PRODUCT_GENDERS)).optional(),
-  collection: Joi.string().optional(),
+  categoryId: Joi.string().optional(),
+  collectionId: Joi.string().optional(),
   variant: Joi.string().optional(),
-  ingredient: Joi.string().optional(),
+  ingredientId: Joi.string().optional(),
   description: Joi.string().optional(),
   isTrending: Joi.boolean().optional(),
   brandName: Joi.string().optional(),
@@ -40,7 +42,7 @@ export const updateProductSchema = Joi.object({
   manufacturerName: Joi.string().optional(),
   manufacturerInfo: Joi.string().optional(),
   isActive: Joi.boolean().optional(),
-}).required();
+});
 
 export const deleteProductSchema = Joi.object({
   id: Joi.string().required(),
@@ -50,6 +52,9 @@ export const getProductsSchema = Joi.object({
   page: Joi.number().optional(),
   limit: Joi.number().optional(),
   search: Joi.string().optional(),
+  categoryId: Joi.string().optional(),
+  collectionId: Joi.string().optional(),
+  ingredientId: Joi.string().optional(),
   startDateFilter: Joi.string().optional(),
   endDateFilter: Joi.string().optional(),
 });

@@ -9,9 +9,10 @@ export type Product = {
   mrp?: number;
   season?: string;
   gender?: string;
-  collection?: string;
+  categoryId?: mongoose.Types.ObjectId;
+  collectionId?: mongoose.Types.ObjectId;
   variant?: string;
-  ingredient?: string;
+  ingredientId?: mongoose.Types.ObjectId;
   description?: string;
   isTrending?: boolean;
   brandName?: string;
@@ -31,9 +32,10 @@ const productSchema = new mongoose.Schema<Product>(
     mrp: { type: Number },
     season: { type: String, enum: Object.values(PRODUCT_SEASONS), default: PRODUCT_SEASONS.ALL_WEATHER },
     gender: { type: String, enum: Object.values(PRODUCT_GENDERS), default: PRODUCT_GENDERS.UNISEX },
-    collection: { type: String },
+    categoryId: { type: mongoose.Schema.Types.ObjectId, ref: "category" },
+    collectionId: { type: mongoose.Schema.Types.ObjectId, ref: "collection" },
     variant: { type: String },
-    ingredient: { type: String },
+    ingredientId: { type: mongoose.Schema.Types.ObjectId, ref: "ingredient" },
     description: { type: String },
     isTrending: { type: Boolean, default: false },
     brandName: { type: String },
