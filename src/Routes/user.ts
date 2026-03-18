@@ -4,8 +4,8 @@ import { userController } from "../controllers";
 
 const router = Router();
 
-router.get("/", adminJwt, userController.adminGetUsers);
-router.put("/:id", adminJwt, userController.adminUpdateUser);
-router.delete("/:id", adminJwt, userController.adminDeleteUser);
+router.put("/edit", adminJwt, userController.updateUser);
+router.delete("/:id", adminJwt, userController.deleteUser);
+router.get("/", adminJwt, userController.getUsers);
 
 export const userRouter = router;

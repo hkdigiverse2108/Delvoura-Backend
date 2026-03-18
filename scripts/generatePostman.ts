@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import 'dotenv/config';
 import axios from 'axios';
-import { Collection, Item, ItemGroup, HeaderDefinition } from 'postman-collection';
+import { Collection, Item, ItemGroup, HeaderDefinition, Url } from 'postman-collection';
 
 const ROUTES_DIR = path.join(__dirname, '../src/Routes');
 const CONTROLLERS_DIR = path.join(__dirname, '../src/controllers');
@@ -119,8 +119,11 @@ function generateSampleFromSchema(schemaName: string, validationFile: string): {
       if (key.includes('email')) sample[key] = "test@example.com";
       else if (key.includes('password')) sample[key] = "Password123!";
       else sample[key] = "sample_" + key;
-    } else if (type === 'number') sample[key] = 123;
-    else if (type === 'boolean') sample[key] = true;
+    } else if (type === 'number') {
+      if (key === 'page') sample[key] = 1;
+      else if (key === 'limit') sample[key] = 10;
+      else sample[key] = 123;
+    } else if (type === 'boolean') sample[key] = true;
     else sample[key] = "";
   }
 
@@ -261,12 +264,25 @@ async function main() {
       }
 
       const urlPath = route.path.replace(/:(\w+)/g, '{{$1}}');
+      const fullUrlStr = `{{baseUrl}}${basePath}${urlPath}`;
+      const url = new Url(fullUrlStr);
+
+      if (result?.sample && (route.method === 'GET' || route.method === 'DELETE')) {
+        for (const [key, value] of Object.entries(result.sample)) {
+          if (key === 'id' && urlPath.includes('{{id}}')) continue;
+
+          url.addQueryParams([{
+            key: key,
+            value: String(value)
+          }]);
+        }
+      }
 
       const request = new Item({
         name: generateReadableName(route, schemaName),
         request: {
           method: route.method,
-          url: `{{baseUrl}}${basePath}${urlPath}`,
+          url: url.toJSON(), // Use toJSON() to get clean plain object
           header: headers,
           body: body,
           auth: null, // inherit from folder

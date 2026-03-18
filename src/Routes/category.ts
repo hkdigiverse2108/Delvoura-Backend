@@ -5,8 +5,8 @@ import { categoryController } from "../controllers";
 const router = Router();
 
 router.post("/add", adminJwt, categoryController.createCategory);
-router.get("/edit", adminJwt, categoryController.getCategories);
-router.put("/:id", adminJwt, categoryController.updateCategory);
+router.put("/edit", adminJwt, categoryController.updateCategory);
 router.delete("/:id", adminJwt, categoryController.deleteCategory);
+router.get("/", adminJwt, categoryController.getCategories);
 
 export const categoryRouter = router;
