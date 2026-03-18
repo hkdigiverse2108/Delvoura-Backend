@@ -9,7 +9,7 @@ export const createCategory = async (req, res) => {
     const { error, value } = createCategorySchema.validate(req.body || {});
     if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
 
-    const nameValue = value.name.trim();
+    const nameValue = value.name;
     value.name = nameValue;
     const exists = await getFirstMatch(categoryModel, { name: nameValue, isDeleted: false }, {}, {});
     if (exists) return res.status(HTTP_STATUS.CONFLICT).json(new apiResponse(HTTP_STATUS.CONFLICT, responseMessage.dataAlreadyExist("Name"), {}, {}));
@@ -32,7 +32,7 @@ export const updateCategory = async (req, res) => {
     const existing = await getFirstMatch(categoryModel, { _id: isValidObjectId(value.categoryId), isDeleted: false }, {}, {});
     if (!existing) return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("Category"), {}, {}));
 
-    const nameValue = value.name.trim();
+    const nameValue = value.name;
     let isExist = await getFirstMatch(categoryModel, { name: nameValue, _id: { $ne: isValidObjectId(value.categoryId) }, isDeleted: false }, {}, {});
     if (isExist) return res.status(HTTP_STATUS.CONFLICT).json(new apiResponse(HTTP_STATUS.CONFLICT, responseMessage.dataAlreadyExist("Name"), {}, {}));
     value.name = nameValue;

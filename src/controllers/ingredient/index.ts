@@ -9,7 +9,7 @@ export const createIngredient = async (req, res) => {
     const { error, value } = createIngredientSchema.validate(req.body || {});
     if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
 
-    const nameValue = value.name.trim();
+    const nameValue = value.name;
     value.name = nameValue;
     const exists = await getFirstMatch(ingredientModel, { name: nameValue, isDeleted: false }, {}, {});
     if (exists) return res.status(HTTP_STATUS.CONFLICT).json(new apiResponse(HTTP_STATUS.CONFLICT, responseMessage.dataAlreadyExist("Name"), {}, {}));
@@ -32,7 +32,7 @@ export const updateIngredient = async (req, res) => {
     const existing = await getFirstMatch(ingredientModel, { _id: isValidObjectId(value.ingredientId), isDeleted: false }, {}, {});
     if (!existing) return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("Ingredient"), {}, {}));
 
-    const nameValue = value.name.trim();
+    const nameValue = value.name;
     let isExist = await getFirstMatch(ingredientModel, { name: nameValue, _id: { $ne: isValidObjectId(value.ingredientId) }, isDeleted: false }, {}, {});
     if (isExist) return res.status(HTTP_STATUS.CONFLICT).json(new apiResponse(HTTP_STATUS.CONFLICT, responseMessage.dataAlreadyExist("Name"), {}, {}));
     value.name = nameValue;

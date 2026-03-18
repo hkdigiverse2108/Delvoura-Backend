@@ -29,14 +29,14 @@ function parseRoutesFile(filePath: string): RouteInfo[] {
   const routes: RouteInfo[] = [];
 
   for (const line of lines) {
-    const match = line.trim().match(/\.(\w+)\("([^"]+)"\s*,\s*(.+)\)/);
+    const match = line.match(/\.(\w+)\("([^"]+)"\s*,\s*(.+)\)/);
     if (!match) continue;
 
     const method = match[1].toUpperCase();
     if (!['GET', 'POST', 'PUT', 'DELETE'].includes(method)) continue;
 
     const routePath = match[2];
-    const rest = match[3].split(',').map(s => s.trim());
+    const rest = match[3].split(',');
 
     const controller = rest.pop()?.replace(/\w+Controller\./, '') || "";
     const middleware = rest.filter(Boolean);
@@ -168,7 +168,7 @@ function generateSampleFromSchema(schemaName: string, validationFile: string): {
 // ---------------- FORMAT TITLE ----------------
 function formatSchemaToTitle(schemaName: string): string {
   let name = schemaName.replace(/Schema$/, '');
-  name = name.replace(/([A-Z])/g, ' $1').trim();
+  name = name.replace(/([A-Z])/g, ' $1');
   return name.charAt(0).toUpperCase() + name.slice(1);
 }
 

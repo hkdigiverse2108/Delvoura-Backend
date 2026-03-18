@@ -1,4 +1,3 @@
-import { Request, Response } from "express";
 import bcryptjs from "bcryptjs";
 import { userModel } from "../../database";
 import {apiResponse,generateHash,generateToken,getOtpExpireTime,getUniqueOtp,HTTP_STATUS,USER_ROLES,} from "../../common";
@@ -12,7 +11,7 @@ const toSafeUser = (user: any) => {
 };
 
 //sigup
-export const signup = async (req: Request, res: Response) => {
+export const signup = async (req, res) => {
   reqInfo(req);
   try {
     const { error, value } = signupSchema.validate(req.body || {});
@@ -44,7 +43,7 @@ export const signup = async (req: Request, res: Response) => {
 };
 
 //login
-export const login = async (req: Request, res: Response) => {
+export const login = async (req, res) => {
   reqInfo(req);
   try {
     const { error, value } = loginSchema.validate(req.body || {});
@@ -95,7 +94,7 @@ export const login = async (req: Request, res: Response) => {
 };
 
 //forgot password
-export const forgotPassword = async (req: Request, res: Response) => {
+export const forgotPassword = async (req, res) => {
   reqInfo(req);
   try {
     const { error, value } = forgotPasswordSchema.validate(req.body || {});
@@ -134,7 +133,7 @@ export const forgotPassword = async (req: Request, res: Response) => {
 };
 
 //reset password
-export const resetPassword = async (req: Request, res: Response) => {
+export const resetPassword = async (req, res) => {
   reqInfo(req);
   try {
     const { error, value } = resetPasswordSchema.validate(req.body || {});
@@ -172,7 +171,7 @@ export const resetPassword = async (req: Request, res: Response) => {
 };
 
 //verifyOtp
-export const verifyOtp = async (req: Request, res: Response) => {
+export const verifyOtp = async (req, res) => {
   reqInfo(req);
   try {
     const { error, value } = verifyOtpSchema.validate(req.body || {});
@@ -216,7 +215,7 @@ export const verifyOtp = async (req: Request, res: Response) => {
 };
 
 // admin change password
-export const adminChangePassword = async (req: Request, res: Response) => {
+export const changePassword = async (req, res) => {
   reqInfo(req);
   try {
     const { error, value } = changePasswordSchema.validate(req.body || {});
@@ -248,6 +247,22 @@ export const adminChangePassword = async (req: Request, res: Response) => {
   } catch (error) {
     console.log(error);
     return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.passwordChangeError, {}, error));
+  }
+};
+
+// logout
+export const logout = async (req, res) => {
+  reqInfo(req);
+  try {
+    const authUser: any = (req.headers as any)?.user;
+    if (!authUser?._id) {
+      return res.status(HTTP_STATUS.UNAUTHORIZED).json(new apiResponse(HTTP_STATUS.UNAUTHORIZED, responseMessage.tokenNotFound, {}, {}));
+    }
+
+    return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.logout, {}, {}));
+  } catch (error) {
+    console.log(error);
+    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.internalServerError, {}, error));
   }
 };
 

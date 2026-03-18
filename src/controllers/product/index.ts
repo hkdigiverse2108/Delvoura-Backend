@@ -35,7 +35,7 @@ export const createProduct = async (req, res) => {
     const { error, value } = createProductSchema.validate(req.body || {});
     if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
 
-    const nameValue = value.name.trim();
+    const nameValue = value.name;
     value.name = nameValue;
     const exists = await getFirstMatch(productModel, { name: nameValue, isDeleted: false }, {}, {});
     if (exists) return res.status(HTTP_STATUS.CONFLICT).json(new apiResponse(HTTP_STATUS.CONFLICT, responseMessage.dataAlreadyExist("Name"), {}, {}));
@@ -70,7 +70,7 @@ export const updateProduct = async (req, res) => {
     const existing = await getFirstMatch(productModel, { _id: isValidObjectId(value.productId), isDeleted: false }, {}, {});
     if (!existing) return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("Product"), {}, {}));
 
-    const nameValue = value.name.trim();
+    const nameValue = value.name;
     const isExist = await getFirstMatch(productModel,{ name: nameValue, _id: { $ne: isValidObjectId(value.productId) }, isDeleted: false },{},{} );
     if (isExist) return res.status(HTTP_STATUS.CONFLICT).json(new apiResponse(HTTP_STATUS.CONFLICT, responseMessage.dataAlreadyExist("Name"), {}, {}));
     value.name = nameValue;

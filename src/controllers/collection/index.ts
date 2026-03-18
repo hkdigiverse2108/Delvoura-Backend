@@ -9,7 +9,7 @@ export const createCollection = async (req, res) => {
     const { error, value } = createCollectionSchema.validate(req.body || {});
     if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
 
-    const nameValue = value.name.trim();
+    const nameValue = value.name;
     value.name = nameValue;
     const exists = await getFirstMatch(collectionModel, { name: nameValue, isDeleted: false }, {}, {});
     if (exists) return res.status(HTTP_STATUS.CONFLICT).json(new apiResponse(HTTP_STATUS.CONFLICT, responseMessage.dataAlreadyExist("Name"), {}, {}));
@@ -32,7 +32,7 @@ export const updateCollection = async (req, res) => {
     const existing = await getFirstMatch(collectionModel, { _id: isValidObjectId(value.collectionId), isDeleted: false }, {}, {});
     if (!existing) return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("Collection"), {}, {}));
 
-    const nameValue = value.name.trim();
+    const nameValue = value.name;
     let isExist = await getFirstMatch(collectionModel, { name: nameValue, _id: { $ne: isValidObjectId(value.collectionId) }, isDeleted: false }, {}, {});
     if (isExist) return res.status(HTTP_STATUS.CONFLICT).json(new apiResponse(HTTP_STATUS.CONFLICT, responseMessage.dataAlreadyExist("Name"), {}, {}));
     value.name = nameValue;

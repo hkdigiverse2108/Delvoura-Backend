@@ -1,6 +1,5 @@
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
-import { Request, Response } from "express";
 import { getFirstMatch } from "./database-service";
 import { userModel } from "../database";
 import { apiResponse, HTTP_STATUS, USER_ROLES } from "../common";
@@ -16,7 +15,7 @@ const getTokenFromHeader = (authorization?: string) => {
   return authorization;
 };
 
-export const adminJwt = async (req: Request, res: Response, next: any) => {
+export const adminJwt = async (req, res, next: any) => {
   const { authorization } = req.headers;
   try {
     if (!authorization) {
@@ -75,7 +74,7 @@ export const adminJwt = async (req: Request, res: Response, next: any) => {
   }
 };
 
-export const userJwt = async (req: Request, res: Response, next: any) => {
+export const userJwt = async (req, res, next: any) => {
   const { authorization } = req.headers;
   try {
     if (!authorization) return next();
