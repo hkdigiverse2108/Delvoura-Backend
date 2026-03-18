@@ -5,8 +5,8 @@ import { collectionController } from "../controllers";
 const router = Router();
 
 router.post("/add", adminJwt, collectionController.createCollection);
-router.get("/edit", adminJwt, collectionController.getCollections);
-router.put("/:id", adminJwt, collectionController.updateCollection);
+router.put("/edit", adminJwt, collectionController.updateCollection);
 router.delete("/:id", adminJwt, collectionController.deleteCollection);
+router.get("/", adminJwt, collectionController.getCollections);
 
 export const collectionRouter = router;

@@ -5,8 +5,8 @@ import { ingredientController } from "../controllers";
 const router = Router();
 
 router.post("/add", adminJwt, ingredientController.createIngredient);
-router.get("/edit", adminJwt, ingredientController.getIngredients);
-router.put("/:id", adminJwt, ingredientController.updateIngredient);
+router.put("/edit", adminJwt, ingredientController.updateIngredient);
 router.delete("/:id", adminJwt, ingredientController.deleteIngredient);
+router.get("/", adminJwt, ingredientController.getIngredients);
 
 export const ingredientRouter = router;
