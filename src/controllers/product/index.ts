@@ -71,12 +71,7 @@ export const updateProduct = async (req, res) => {
     if (!existing) return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("Product"), {}, {}));
 
     const nameValue = value.name.trim();
-    const isExist = await getFirstMatch(
-      productModel,
-      { name: nameValue, _id: { $ne: isValidObjectId(value.productId) }, isDeleted: false },
-      {},
-      {}
-    );
+    const isExist = await getFirstMatch(productModel,{ name: nameValue, _id: { $ne: isValidObjectId(value.productId) }, isDeleted: false },{},{} );
     if (isExist) return res.status(HTTP_STATUS.CONFLICT).json(new apiResponse(HTTP_STATUS.CONFLICT, responseMessage.dataAlreadyExist("Name"), {}, {}));
     value.name = nameValue;
 

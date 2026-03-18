@@ -92,16 +92,9 @@ export const getCollections = async (req, res) => {
       page_limit: Math.ceil(totalCount / (parseInt(limit) || totalCount)) || 1,
     }
 
-    return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.getDataSuccess("Collections"), {
-      collection_data: response,
-      totalData: totalCount,
-      state: stateObj
-    }, {}));
+    return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.getDataSuccess("Collections"), {collection_data: response,totalData: totalCount,state: stateObj}, {}));
   } catch (error) {
     console.log(error);
     return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.internalServerError, {}, error));
   }
 };
-
-
-
