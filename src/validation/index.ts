@@ -6,5 +6,7 @@ export * from "./collection";
 export * from "./season";
 export * from "./scent";
 export * from "./settings";
+export * from "./banner";
+export * from "./topbar";
 export * from "./product";
 export * from "./rating";
