@@ -5,5 +5,6 @@ export * from "./scent";
 export * from "./settings";
 export * from "./banner";
 export * from "./topbar";
+export * from "./instagram";
 export * from "./product";
 export * from "./rating";
