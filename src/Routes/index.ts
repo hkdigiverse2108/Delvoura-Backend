@@ -5,6 +5,7 @@ import { userRouter } from "./user";
 import { collectionRouter } from "./collection";
 import { seasonRouter } from "./season";
 import { scentRouter } from "./scent";
+import { settingsRouter } from "./settings";
 import { productRouter } from "./product";
 import { ratingRouter } from "./rating";
 
@@ -16,6 +17,7 @@ router.use("/user", userRouter);
 router.use("/collection", collectionRouter);
 router.use("/season", seasonRouter);
 router.use("/scent", scentRouter);
+router.use("/settings", settingsRouter);
 router.use("/product", productRouter);
 router.use("/rating", ratingRouter);
 

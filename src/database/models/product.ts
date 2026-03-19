@@ -8,17 +8,19 @@ export type Product = {
   coverimage?: string;
   price?: number;
   mrp?: number;
-  seasonId?: mongoose.Types.ObjectId[];
+  seasonIds?: mongoose.Types.ObjectId[];
   gender?: string;
-  collectionId?: mongoose.Types.ObjectId[];
+  collectionIds?: mongoose.Types.ObjectId[];
   variant?: string[];
   ingredient?: string[];
   description?: string;
-  scentId?: mongoose.Types.ObjectId[];
+  scentIds?: string[];
   usageTips?: string;
   scentStory?: string;
-  scoHost?: string;
-  scoApiKey?: string;
+  metaTitle?: string;
+  metaDescription?: string;
+  metaKeywords?: string[];
+  slug?: string;
   isTrending?: boolean;
   brandManufacturerInfo?: string;
   isActive?: boolean;
@@ -33,17 +35,19 @@ const productSchema = new mongoose.Schema<Product>(
     coverimage: { type: String },
     price: { type: Number },
     mrp: { type: Number },
-    seasonId: [{ type: mongoose.Schema.Types.ObjectId, ref: "season" }],
+    seasonIds: [{ type: mongoose.Schema.Types.ObjectId, ref: "season" }],
     gender: { type: String, enum: Object.values(PRODUCT_GENDERS), default: PRODUCT_GENDERS.UNISEX },
-    collectionId: [{ type: mongoose.Schema.Types.ObjectId, ref: "collection" }],
+    collectionIds: [{ type: mongoose.Schema.Types.ObjectId, ref: "collection" }],
     variant: [{ type: String }],
     ingredient: [ { type: String }],
     description: { type: String },
-    scentId: [{ type: mongoose.Schema.Types.ObjectId, ref: "scent" }],
+    scentIds: [{ type: String }],
     usageTips: { type: String },
     scentStory: { type: String },
-    scoHost: { type: String },
-    scoApiKey: { type: String },
+    metaTitle: { type: String },
+    metaDescription: { type: String },
+    metaKeywords: [{ type: String }],
+    slug: { type: String },
     brandManufacturerInfo: { type: String },
     isTrending: { type: Boolean, default: false },
     isActive: { type: Boolean, default: true },

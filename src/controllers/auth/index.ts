@@ -47,27 +47,20 @@ export const login = async (req, res) => {
   reqInfo(req);
   try {
     const { error, value } = loginSchema.validate(req.body || {});
-    if (error) {
-      return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
-    }
+    if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
 
     const { email, password } = value;
     const emailValue = email;
 
     const user = await getFirstMatch(userModel, { email: emailValue, isDeleted: false }, {}, {});
 
-    if (!user) {
-      return res.status(HTTP_STATUS.UNAUTHORIZED).json(new apiResponse(HTTP_STATUS.UNAUTHORIZED, responseMessage.invalidUserPasswordEmail, {}, {}));
-    }
+    if (!user) return res.status(HTTP_STATUS.UNAUTHORIZED).json(new apiResponse(HTTP_STATUS.UNAUTHORIZED, responseMessage.invalidUserPasswordEmail, {}, {}));
+  
 
-    if (user?.isActive === false) {
-      return res.status(HTTP_STATUS.FORBIDDEN).json(new apiResponse(HTTP_STATUS.FORBIDDEN, responseMessage.accountBlock, {}, {}));
-    }
+    if (user?.isActive === false) return res.status(HTTP_STATUS.FORBIDDEN).json(new apiResponse(HTTP_STATUS.FORBIDDEN, responseMessage.accountBlock, {}, {}));
 
     const isPasswordMatch = await bcryptjs.compare(password, user?.password || "");
-    if (!isPasswordMatch) {
-      return res.status(HTTP_STATUS.UNAUTHORIZED).json(new apiResponse(HTTP_STATUS.UNAUTHORIZED, responseMessage.invalidUserPasswordEmail, {}, {}));
-    }
+    if (!isPasswordMatch)return res.status(HTTP_STATUS.UNAUTHORIZED).json(new apiResponse(HTTP_STATUS.UNAUTHORIZED, responseMessage.invalidUserPasswordEmail, {}, {}));
 
     if (user?.roles === USER_ROLES.ADMIN) {
       const otp = await getUniqueOtp();
@@ -98,20 +91,15 @@ export const forgotPassword = async (req, res) => {
   reqInfo(req);
   try {
     const { error, value } = forgotPasswordSchema.validate(req.body || {});
-    if (error) {
-      return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
-    }
-
+    if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
+    
     const { email } = value;
     const user = await getFirstMatch(userModel, { email, isDeleted: false }, {}, {});
 
-    if (!user) {
-      return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidEmail, {}, {}));
-    }
+    if (!user) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidEmail, {}, {}));
 
-    if (user?.isActive === false) {
-      return res.status(HTTP_STATUS.FORBIDDEN).json(new apiResponse(HTTP_STATUS.FORBIDDEN, responseMessage.accountBlock, {}, {}));
-    }
+    if (user?.isActive === false) return res.status(HTTP_STATUS.FORBIDDEN).json(new apiResponse(HTTP_STATUS.FORBIDDEN, responseMessage.accountBlock, {}, {}));
+    
 
     const otp = await getUniqueOtp();
     const otpExpireTime = getOtpExpireTime();
@@ -137,28 +125,20 @@ export const resetPassword = async (req, res) => {
   reqInfo(req);
   try {
     const { error, value } = resetPasswordSchema.validate(req.body || {});
-    if (error) {
-      return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
-    }
+    if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
+    
 
     const { email, otp, password } = value;
     const user = await getFirstMatch(userModel, { email, isDeleted: false }, {}, {});
 
-    if (!user) {
-      return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidEmail, {}, {}));
-    }
+    if (!user)return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidEmail, {}, {}));
+    
+    if (user?.isActive === false) return res.status(HTTP_STATUS.FORBIDDEN).json(new apiResponse(HTTP_STATUS.FORBIDDEN, responseMessage.accountBlock, {}, {}));
 
-    if (user?.isActive === false) {
-      return res.status(HTTP_STATUS.FORBIDDEN).json(new apiResponse(HTTP_STATUS.FORBIDDEN, responseMessage.accountBlock, {}, {}));
-    }
-
-    if (Number(user?.otp) !== Number(otp)) {
-      return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidOTP, {}, {}));
-    }
-
-    if (user?.otpExpireTime && user.otpExpireTime < new Date()) {
-      return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.expireOTP, {}, {}));
-    }
+    if (Number(user?.otp) !== Number(otp))return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidOTP, {}, {}));
+  
+    if (user?.otpExpireTime && user.otpExpireTime < new Date()) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.expireOTP, {}, {}));
+    
 
     const hashedPassword = await generateHash(password);
     await updateData(userModel, { _id: user._id }, { password: hashedPassword, otp: null, otpExpireTime: null }, {});
@@ -175,33 +155,21 @@ export const verifyOtp = async (req, res) => {
   reqInfo(req);
   try {
     const { error, value } = verifyOtpSchema.validate(req.body || {});
-    if (error) {
-      return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
-    }
+    if (error)return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
 
     const { email, otp } = value;
 
     const user = await getFirstMatch(userModel, { email, isDeleted: false }, {}, {});
-    if (!user) {
-      return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.getDataNotFound("User"), {}, {}));
-    }
-
-    if (user?.roles !== USER_ROLES.ADMIN) {
-      return res.status(HTTP_STATUS.UNAUTHORIZED).json(new apiResponse(HTTP_STATUS.UNAUTHORIZED, responseMessage.accessDenied, {}, {}));
-    }
-
-    if (user?.isActive === false) {
-      return res.status(HTTP_STATUS.FORBIDDEN).json(new apiResponse(HTTP_STATUS.FORBIDDEN, responseMessage.accountBlock, {}, {}));
-    }
-
-    if (Number(user?.otp) !== Number(otp)) {
-      return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidOTP, {}, {}));
-    }
-
-    if (user?.otpExpireTime && user.otpExpireTime < new Date()) {
-      return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.expireOTP, {}, {}));
-    }
-
+    if (!user) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.getDataNotFound("User"), {}, {}));
+  
+    if (user?.roles !== USER_ROLES.ADMIN) return res.status(HTTP_STATUS.UNAUTHORIZED).json(new apiResponse(HTTP_STATUS.UNAUTHORIZED, responseMessage.accessDenied, {}, {}));
+  
+    if (user?.isActive === false) return res.status(HTTP_STATUS.FORBIDDEN).json(new apiResponse(HTTP_STATUS.FORBIDDEN, responseMessage.accountBlock, {}, {}));
+  
+    if (Number(user?.otp) !== Number(otp)) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidOTP, {}, {}));
+    
+    if (user?.otpExpireTime && user.otpExpireTime < new Date()) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.expireOTP, {}, {}));
+    
     await updateData(userModel, { _id: user._id }, { otp: null, otpExpireTime: null }, {});
 
     const tokenPayload = {_id: user._id,email: user.email,roles: user.roles,type: user.roles,generatedOn: Date.now(),};
@@ -214,32 +182,24 @@ export const verifyOtp = async (req, res) => {
   }
 };
 
-// admin change password
+//change password
 export const changePassword = async (req, res) => {
   reqInfo(req);
   try {
     const { error, value } = changePasswordSchema.validate(req.body || {});
-    if (error) {
-      return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
-    }
+    if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
 
     const { oldPassword, newPassword } = value;
     const authUser: any = (req.headers as any)?.user;
 
-    if (!authUser?._id) {
-      return res.status(HTTP_STATUS.UNAUTHORIZED).json(new apiResponse(HTTP_STATUS.UNAUTHORIZED, responseMessage.invalidToken, {}, {}));
-    }
-
+    if (!authUser?._id) return res.status(HTTP_STATUS.UNAUTHORIZED).json(new apiResponse(HTTP_STATUS.UNAUTHORIZED, responseMessage.invalidToken, {}, {}));
+  
     const user = await getFirstMatch(userModel, { _id: authUser._id, isDeleted: false }, {}, {});
-    if (!user) {
-      return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("User"), {}, {}));
-    }
-
+    if (!user)  return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("User"), {}, {}));
+  
     const isPasswordMatch = await bcryptjs.compare(oldPassword, user?.password || "");
-    if (!isPasswordMatch) {
-      return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.oldPasswordError, {}, {}));
-    }
-
+    if (!isPasswordMatch) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.oldPasswordError, {}, {}));
+  
     const hashedPassword = await generateHash(newPassword);
     await updateData(userModel, { _id: user._id }, { password: hashedPassword }, {});
 
@@ -255,10 +215,8 @@ export const logout = async (req, res) => {
   reqInfo(req);
   try {
     const authUser: any = (req.headers as any)?.user;
-    if (!authUser?._id) {
-      return res.status(HTTP_STATUS.UNAUTHORIZED).json(new apiResponse(HTTP_STATUS.UNAUTHORIZED, responseMessage.tokenNotFound, {}, {}));
-    }
-
+    if (!authUser?._id) return res.status(HTTP_STATUS.UNAUTHORIZED).json(new apiResponse(HTTP_STATUS.UNAUTHORIZED, responseMessage.tokenNotFound, {}, {}));
+    
     return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.logout, {}, {}));
   } catch (error) {
     console.log(error);

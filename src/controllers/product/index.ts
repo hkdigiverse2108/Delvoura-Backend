@@ -3,32 +3,6 @@ import { collectionModel, productModel, ratingModel, seasonModel, scentModel } f
 import { aggregateData, countData, createData, findAllWithPopulateWithSorting, findOneAndPopulate, getData, getFirstMatch, reqInfo, responseMessage, updateData } from "../../helper";
 import { createProductSchema, deleteProductSchema, getProductsSchema, updateProductSchema } from "../../validation";
 
-const getRatingSummary = async (productId) => {
-  const ratingStats = await aggregateData(ratingModel, [
-    { $match: { productId, isDeleted: false } },
-    {
-      $group: {
-        _id: "$productId",
-        avgRating: { $avg: "$starRating" },
-        ratingCount: { $sum: 1 },
-      },
-    },
-  ]);
-
-  if (!ratingStats?.length) return { avgRating: 0, ratingCount: 0 };
-
-  return {
-    avgRating: Number(ratingStats[0].avgRating.toFixed(2)),
-    ratingCount: ratingStats[0].ratingCount,
-  };
-};
-
-const productPopulate = [
-  { path: "collectionId", select: "name" },
-  { path: "seasonId", select: "name" },
-  { path: "scentId", select: "name" },
-];
-
 export const createProduct = async (req, res) => {
   reqInfo(req);
   try {
@@ -42,7 +16,7 @@ export const createProduct = async (req, res) => {
 
     let collectionIds = Array.isArray(value.collectionId) ? value.collectionId : (value.collectionId ? [value.collectionId] : []);
     collectionIds = Array.from(new Set(collectionIds.map((id) => id?.trim()).filter(Boolean)));
-    if (collectionIds.length) {
+    if (collectionIds.length > 0) {
       const validCollectionIds = collectionIds.map((id) => isValidObjectId(id));
       if (validCollectionIds.some((id) => !id)) {
         return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Collection"), {}, {}));
@@ -55,7 +29,7 @@ export const createProduct = async (req, res) => {
     }
     let seasonIds = Array.isArray(value.seasonId) ? value.seasonId : (value.seasonId ? [value.seasonId] : []);
     seasonIds = Array.from(new Set(seasonIds.map((id) => id?.trim()).filter(Boolean)));
-    if (seasonIds.length) {
+    if (seasonIds.length > 0) {
       const validSeasonIds = seasonIds.map((id) => isValidObjectId(id));
       if (validSeasonIds.some((id) => !id)) {
         return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Season"), {}, {}));
@@ -68,16 +42,12 @@ export const createProduct = async (req, res) => {
     }
     let scentIds = Array.isArray(value.scentId) ? value.scentId : (value.scentId ? [value.scentId] : []);
     scentIds = Array.from(new Set(scentIds.map((id) => id?.trim()).filter(Boolean)));
-    if (scentIds.length) {
-      const validScentIds = scentIds.map((id) => isValidObjectId(id));
-      if (validScentIds.some((id) => !id)) {
-        return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Scent"), {}, {}));
-      }
-      const scents = await getData(scentModel, { _id: { $in: validScentIds }, isDeleted: false }, { _id: 1 }, {});
-      if (scents.length !== validScentIds.length) {
+    if (scentIds.length > 0) {
+      const scents = await getData(scentModel, { name: { $in: scentIds }, isDeleted: false }, { name: 1 }, {});
+      if (scents.length !== scentIds.length) {
         return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("Scent"), {}, {}));
       }
-      value.scentId = validScentIds;
+      value.scentId = scentIds;
     }
 
     const response = await createData(productModel, value);
@@ -105,7 +75,7 @@ export const updateProduct = async (req, res) => {
    
     let collectionIds = Array.isArray(value.collectionId) ? value.collectionId : (value.collectionId ? [value.collectionId] : []);
     collectionIds = Array.from(new Set(collectionIds.map((id) => id?.trim()).filter(Boolean)));
-    if (collectionIds.length) {
+    if (collectionIds.length > 0) {
       const validCollectionIds = collectionIds.map((id) => isValidObjectId(id));
       if (validCollectionIds.some((id) => !id)) {
         return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Collection"), {}, {}));
@@ -119,7 +89,7 @@ export const updateProduct = async (req, res) => {
 
     let seasonIds = Array.isArray(value.seasonId) ? value.seasonId : (value.seasonId ? [value.seasonId] : []);
     seasonIds = Array.from(new Set(seasonIds.map((id) => id?.trim()).filter(Boolean)));
-    if (seasonIds.length) {
+    if (seasonIds.length > 0) {
       const validSeasonIds = seasonIds.map((id) => isValidObjectId(id));
       if (validSeasonIds.some((id) => !id)) {
         return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Season"), {}, {}));
@@ -132,16 +102,12 @@ export const updateProduct = async (req, res) => {
     }
     let scentIds = Array.isArray(value.scentId) ? value.scentId : (value.scentId ? [value.scentId] : []);
     scentIds = Array.from(new Set(scentIds.map((id) => id?.trim()).filter(Boolean)));
-    if (scentIds.length) {
-      const validScentIds = scentIds.map((id) => isValidObjectId(id));
-      if (validScentIds.some((id) => !id)) {
-        return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Scent"), {}, {}));
-      }
-      const scents = await getData(scentModel, { _id: { $in: validScentIds }, isDeleted: false }, { _id: 1 }, {});
-      if (scents.length !== validScentIds.length) {
+    if (scentIds.length > 0) {
+      const scents = await getData(scentModel, { name: { $in: scentIds }, isDeleted: false }, { name: 1 }, {});
+      if (scents.length !== scentIds.length) {
         return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("Scent"), {}, {}));
       }
-      value.scentId = validScentIds;
+      value.scentId = scentIds;
     }
 
     const updated = await updateData(productModel, { _id: isValidObjectId(value.productId) }, value, {});
@@ -175,7 +141,7 @@ export const getProducts = async (req, res) => {
     const { error, value } = getProductsSchema.validate(req.query);
     if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
 
-    const { page, limit, search, startDateFilter, endDateFilter, collectionId, seasonId, scentId, gender } = value;
+    const { page, limit, search, startDateFilter, endDateFilter, collectionFilter, seasonFilter, scentFilter, gender } = value;
     let criteria: any = { isDeleted: false }, options: any = { lean: true };
 
     if (search) {
@@ -186,20 +152,33 @@ export const getProducts = async (req, res) => {
         { variant: { $regex: search, $options: "si" } },
       ];
     }
-    if (collectionId) {
-      const collectionObjectId = isValidObjectId(collectionId);
-      if (!collectionObjectId) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Collection"), {}, {}));
-      criteria.collectionId = collectionObjectId;
+    let collectionIds: string[] = [];
+    if (Array.isArray(collectionFilter)) collectionIds = collectionFilter;
+    else if (collectionFilter) collectionIds = collectionFilter.split(",");
+    collectionIds = collectionIds.map((id) => id?.trim()).filter(Boolean);
+    if (collectionIds.length > 0) {
+      const collectionObjectIds = collectionIds.map((id) => isValidObjectId(id)).filter(Boolean);
+      if (!collectionObjectIds.length) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Collection"), {}, {}));
+      criteria.collectionId = { $in: collectionObjectIds };
     }
-    if (seasonId) {
-      const seasonObjectId = isValidObjectId(seasonId);
-      if (!seasonObjectId) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Season"), {}, {}));
-      criteria.seasonId = seasonObjectId;
+
+    let seasonIds: string[] = [];
+    if (Array.isArray(seasonFilter)) seasonIds = seasonFilter;
+    else if (seasonFilter) seasonIds = seasonFilter.split(",");
+    seasonIds = seasonIds.map((id) => id?.trim()).filter(Boolean);
+    if (seasonIds.length > 0) {
+      const seasonObjectIds = seasonIds.map((id) => isValidObjectId(id)).filter(Boolean);
+      if (!seasonObjectIds.length) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Season"), {}, {}));
+      criteria.seasonId = { $in: seasonObjectIds };
     }
-    if (scentId) {
-      const scentObjectId = isValidObjectId(scentId);
-      if (!scentObjectId) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Scent"), {}, {}));
-      criteria.scentId = scentObjectId;
+
+    let scentIds: string[] = [];
+    if (Array.isArray(scentFilter)) scentIds = scentFilter;
+    else if (scentFilter) scentIds = scentFilter.split(",");
+    scentIds = scentIds.map((name) => name?.trim()).filter(Boolean);
+    if (scentIds.length > 0) {
+      const normalized = Array.from(new Set(scentIds));
+      criteria.scentId = { $in: normalized };
     }
     if (gender) {
       criteria.gender = gender;
@@ -253,3 +232,28 @@ export const getProductById = async (req, res) => {
     return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.internalServerError, {}, error));
   }
 };
+
+const getRatingSummary = async (productId) => {
+  const ratingStats = await aggregateData(ratingModel, [
+    { $match: { productId, isDeleted: false } },
+    {
+      $group: {
+        _id: "$productId",
+        avgRating: { $avg: "$starRating" },
+        ratingCount: { $sum: 1 },
+      },
+    },
+  ]);
+
+  if (!ratingStats?.length) return { avgRating: 0, ratingCount: 0 };
+
+  return {
+    avgRating: Number(ratingStats[0].avgRating.toFixed(2)),
+    ratingCount: ratingStats[0].ratingCount,
+  };
+};
+
+const productPopulate = [
+  { path: "collectionIds", select: "name" },
+  { path: "seasonIds", select: "name" },
+];
