@@ -1,5 +1,4 @@
 export * as authController from './auth'
-export * as categoryController from './category'
 export * as collectionController from './collection'
 export * as seasonController from './season'
 export * as scentController from './scent'
