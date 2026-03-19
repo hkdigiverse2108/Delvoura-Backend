@@ -4,7 +4,7 @@ import { userController } from "../controllers";
 
 const router = Router();
 
-router.get("/getme", userJwt, userController.getMe);
+router.get("/:id", adminJwt, userController.getUserById);
 router.put("/edit", adminJwt, userController.updateUser);
 router.delete("/:id", adminJwt, userController.deleteUser);
 router.get("/", adminJwt, userController.getUsers);

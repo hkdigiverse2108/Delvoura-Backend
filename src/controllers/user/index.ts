@@ -84,37 +84,31 @@ export const getUsers = async (req, res) => {
       page_limit: Math.ceil(totalCount / (parseInt(limit) || totalCount)) || 1,
     }
 
-    return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.getDataSuccess("Users"), {
-      user_data: response,
-      totalData: totalCount,
-      state: stateObj
-    }, {}));
+    return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.getDataSuccess("Users"), {user_data: response,totalData: totalCount,state: stateObj}, {}));
   } catch (error) {
     console.log(error);
     return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.internalServerError, {}, error));
   }
 };
 
-export const getMe = async (req, res) => {
+export const getUserById = async (req, res) => {
   reqInfo(req);
   try {
-    const authUser: any = (req.headers as any)?.user;
+    const { error, value } = deleteUserSchema.validate(req.params);
+    if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
 
-    if (!authUser?._id)return res.status(HTTP_STATUS.UNAUTHORIZED).json(new apiResponse(HTTP_STATUS.UNAUTHORIZED, responseMessage.tokenNotFound, {}, {}));
-
-    const userId = isValidObjectId(authUser._id?.toString ? authUser._id.toString() : authUser._id);
+    const userId = isValidObjectId(value.id);
     if (!userId) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("User"), {}, {}));
-    
 
-    const user = await getFirstMatch(userModel,{ _id: userId, isDeleted: false },{ password: 0, otp: 0, otpExpireTime: 0, __v: 0 },{} );
-
+    const user = await getFirstMatch(userModel, { _id: userId, isDeleted: false }, { password: 0, otp: 0, otpExpireTime: 0, __v: 0 }, {});
     if (!user) return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("User"), {}, {}));
-    
+
     return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.getDataSuccess("User"), user, {}));
   } catch (error) {
     console.log(error);
     return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.internalServerError, {}, error));
   }
 };
+
 
 
