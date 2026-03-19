@@ -1,12 +1,12 @@
 import mongoose from "mongoose";
 
-export type Ingredient = {
+export type Scent = {
   name: string;
   isActive?: boolean;
   isDeleted?: boolean;
 };
 
-const ingredientSchema = new mongoose.Schema<Ingredient>(
+const scentSchema = new mongoose.Schema<Scent>(
   {
     name: { type: String, required: true },
     isActive: { type: Boolean, default: true },
@@ -15,4 +15,4 @@ const ingredientSchema = new mongoose.Schema<Ingredient>(
   { timestamps: true }
 );
 
-export const ingredientModel = mongoose.model<Ingredient>("ingredient", ingredientSchema, "ingredient");
+export const scentModel = mongoose.model<Scent>("scent", scentSchema, "scent");

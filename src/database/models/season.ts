@@ -1,12 +1,12 @@
 import mongoose from "mongoose";
 
-export type Category = {
+export type Season = {
   name: string;
   isActive?: boolean;
   isDeleted?: boolean;
 };
 
-const categorySchema = new mongoose.Schema<Category>(
+const seasonSchema = new mongoose.Schema<Season>(
   {
     name: { type: String, required: true },
     isActive: { type: Boolean, default: true },
@@ -15,4 +15,4 @@ const categorySchema = new mongoose.Schema<Category>(
   { timestamps: true }
 );
 
-export const categoryModel = mongoose.model<Category>("category", categorySchema, "category");
+export const seasonModel = mongoose.model<Season>("season", seasonSchema, "season");

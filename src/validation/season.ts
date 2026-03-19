@@ -1,21 +1,21 @@
 import Joi from "joi";
 
-export const createIngredientSchema = Joi.object({
+export const createSeasonSchema = Joi.object({
   name: Joi.string().required(),
   isActive: Joi.boolean().optional(),
 });
 
-export const updateIngredientSchema = Joi.object({
-  ingredientId: Joi.string().required(),
+export const updateSeasonSchema = Joi.object({
+  seasonId: Joi.string().required(),
   name: Joi.string().required(),
   isActive: Joi.boolean().optional(),
 });
 
-export const deleteIngredientSchema = Joi.object({
+export const deleteSeasonSchema = Joi.object({
   id: Joi.string().required(),
 });
 
-export const getIngredientsSchema = Joi.object({
+export const getSeasonsSchema = Joi.object({
   page: Joi.number().optional(),
   limit: Joi.number().optional(),
   search: Joi.string().optional(),

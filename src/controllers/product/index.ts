@@ -1,6 +1,6 @@
 import { apiResponse, HTTP_STATUS, isValidObjectId, parseDateRange } from "../../common";
-import { categoryModel, collectionModel, ingredientModel, productModel, ratingModel } from "../../database";
-import { aggregateData, countData, createData, findAllWithPopulateWithSorting, findOneAndPopulate, getFirstMatch, reqInfo, responseMessage, updateData } from "../../helper";
+import { collectionModel, productModel, ratingModel, seasonModel, scentModel } from "../../database";
+import { aggregateData, countData, createData, findAllWithPopulateWithSorting, findOneAndPopulate, getData, getFirstMatch, reqInfo, responseMessage, updateData } from "../../helper";
 import { createProductSchema, deleteProductSchema, getProductsSchema, updateProductSchema } from "../../validation";
 
 const getRatingSummary = async (productId) => {
@@ -24,9 +24,9 @@ const getRatingSummary = async (productId) => {
 };
 
 const productPopulate = [
-  { path: "categoryId", select: "name" },
   { path: "collectionId", select: "name" },
-  { path: "ingredientId", select: "name" },
+  { path: "seasonId", select: "name" },
+  { path: "scentId", select: "name" },
 ];
 
 export const createProduct = async (req, res) => {
@@ -40,17 +40,44 @@ export const createProduct = async (req, res) => {
     const exists = await getFirstMatch(productModel, { name: nameValue, isDeleted: false }, {}, {});
     if (exists) return res.status(HTTP_STATUS.CONFLICT).json(new apiResponse(HTTP_STATUS.CONFLICT, responseMessage.dataAlreadyExist("Name"), {}, {}));
 
-    if (value.categoryId) {
-      const category = await getFirstMatch(categoryModel, { _id: isValidObjectId(value.categoryId), isDeleted: false }, {}, {});
-      if (!category) return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("Category"), {}, {}));
+    let collectionIds = Array.isArray(value.collectionId) ? value.collectionId : (value.collectionId ? [value.collectionId] : []);
+    collectionIds = Array.from(new Set(collectionIds.map((id) => id?.trim()).filter(Boolean)));
+    if (collectionIds.length) {
+      const validCollectionIds = collectionIds.map((id) => isValidObjectId(id));
+      if (validCollectionIds.some((id) => !id)) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Collection"), {}, {}));
+      }
+      const collections = await getData(collectionModel, { _id: { $in: validCollectionIds }, isDeleted: false }, { _id: 1 }, {});
+      if (collections.length !== validCollectionIds.length) {
+        return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("Collection"), {}, {}));
+      }
+      value.collectionId = validCollectionIds;
     }
-    if (value.collectionId) {
-      const collection = await getFirstMatch(collectionModel, { _id: isValidObjectId(value.collectionId), isDeleted: false }, {}, {});
-      if (!collection) return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("Collection"), {}, {}));
+    let seasonIds = Array.isArray(value.seasonId) ? value.seasonId : (value.seasonId ? [value.seasonId] : []);
+    seasonIds = Array.from(new Set(seasonIds.map((id) => id?.trim()).filter(Boolean)));
+    if (seasonIds.length) {
+      const validSeasonIds = seasonIds.map((id) => isValidObjectId(id));
+      if (validSeasonIds.some((id) => !id)) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Season"), {}, {}));
+      }
+      const seasons = await getData(seasonModel, { _id: { $in: validSeasonIds }, isDeleted: false }, { _id: 1 }, {});
+      if (seasons.length !== validSeasonIds.length) {
+        return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("Season"), {}, {}));
+      }
+      value.seasonId = validSeasonIds;
     }
-    if (value.ingredientId) {
-      const ingredient = await getFirstMatch(ingredientModel, { _id: isValidObjectId(value.ingredientId), isDeleted: false }, {}, {});
-      if (!ingredient) return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("Ingredient"), {}, {}));
+    let scentIds = Array.isArray(value.scentId) ? value.scentId : (value.scentId ? [value.scentId] : []);
+    scentIds = Array.from(new Set(scentIds.map((id) => id?.trim()).filter(Boolean)));
+    if (scentIds.length) {
+      const validScentIds = scentIds.map((id) => isValidObjectId(id));
+      if (validScentIds.some((id) => !id)) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Scent"), {}, {}));
+      }
+      const scents = await getData(scentModel, { _id: { $in: validScentIds }, isDeleted: false }, { _id: 1 }, {});
+      if (scents.length !== validScentIds.length) {
+        return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("Scent"), {}, {}));
+      }
+      value.scentId = validScentIds;
     }
 
     const response = await createData(productModel, value);
@@ -75,17 +102,46 @@ export const updateProduct = async (req, res) => {
     if (isExist) return res.status(HTTP_STATUS.CONFLICT).json(new apiResponse(HTTP_STATUS.CONFLICT, responseMessage.dataAlreadyExist("Name"), {}, {}));
     value.name = nameValue;
 
-    if (value.categoryId) {
-      const category = await getFirstMatch(categoryModel, { _id: isValidObjectId(value.categoryId), isDeleted: false }, {}, {});
-      if (!category) return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("Category"), {}, {}));
+   
+    let collectionIds = Array.isArray(value.collectionId) ? value.collectionId : (value.collectionId ? [value.collectionId] : []);
+    collectionIds = Array.from(new Set(collectionIds.map((id) => id?.trim()).filter(Boolean)));
+    if (collectionIds.length) {
+      const validCollectionIds = collectionIds.map((id) => isValidObjectId(id));
+      if (validCollectionIds.some((id) => !id)) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Collection"), {}, {}));
+      }
+      const collections = await getData(collectionModel, { _id: { $in: validCollectionIds }, isDeleted: false }, { _id: 1 }, {});
+      if (collections.length !== validCollectionIds.length) {
+        return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("Collection"), {}, {}));
+      }
+      value.collectionId = validCollectionIds;
     }
-    if (value.collectionId) {
-      const collection = await getFirstMatch(collectionModel, { _id: isValidObjectId(value.collectionId), isDeleted: false }, {}, {});
-      if (!collection) return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("Collection"), {}, {}));
+
+    let seasonIds = Array.isArray(value.seasonId) ? value.seasonId : (value.seasonId ? [value.seasonId] : []);
+    seasonIds = Array.from(new Set(seasonIds.map((id) => id?.trim()).filter(Boolean)));
+    if (seasonIds.length) {
+      const validSeasonIds = seasonIds.map((id) => isValidObjectId(id));
+      if (validSeasonIds.some((id) => !id)) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Season"), {}, {}));
+      }
+      const seasons = await getData(seasonModel, { _id: { $in: validSeasonIds }, isDeleted: false }, { _id: 1 }, {});
+      if (seasons.length !== validSeasonIds.length) {
+        return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("Season"), {}, {}));
+      }
+      value.seasonId = validSeasonIds;
     }
-    if (value.ingredientId) {
-      const ingredient = await getFirstMatch(ingredientModel, { _id: isValidObjectId(value.ingredientId), isDeleted: false }, {}, {});
-      if (!ingredient) return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("Ingredient"), {}, {}));
+    let scentIds = Array.isArray(value.scentId) ? value.scentId : (value.scentId ? [value.scentId] : []);
+    scentIds = Array.from(new Set(scentIds.map((id) => id?.trim()).filter(Boolean)));
+    if (scentIds.length) {
+      const validScentIds = scentIds.map((id) => isValidObjectId(id));
+      if (validScentIds.some((id) => !id)) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Scent"), {}, {}));
+      }
+      const scents = await getData(scentModel, { _id: { $in: validScentIds }, isDeleted: false }, { _id: 1 }, {});
+      if (scents.length !== validScentIds.length) {
+        return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("Scent"), {}, {}));
+      }
+      value.scentId = validScentIds;
     }
 
     const updated = await updateData(productModel, { _id: isValidObjectId(value.productId) }, value, {});
@@ -119,35 +175,34 @@ export const getProducts = async (req, res) => {
     const { error, value } = getProductsSchema.validate(req.query);
     if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
 
-    const { page, limit, search, startDateFilter, endDateFilter, categoryId, collectionId, ingredientId } = value;
+    const { page, limit, search, startDateFilter, endDateFilter, collectionId, seasonId, scentId, gender } = value;
     let criteria: any = { isDeleted: false }, options: any = { lean: true };
 
     if (search) {
       criteria.$or = [
         { name: { $regex: search, $options: "si" } },
         { title: { $regex: search, $options: "si" } },
-        { brandName: { $regex: search, $options: "si" } },
-        { manufacturerName: { $regex: search, $options: "si" } },
-        { season: { $regex: search, $options: "si" } },
         { gender: { $regex: search, $options: "si" } },
         { variant: { $regex: search, $options: "si" } },
       ];
-    }
-
-    if (categoryId) {
-      const categoryObjectId = isValidObjectId(categoryId);
-      if (!categoryObjectId) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Category"), {}, {}));
-      criteria.categoryId = categoryObjectId;
     }
     if (collectionId) {
       const collectionObjectId = isValidObjectId(collectionId);
       if (!collectionObjectId) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Collection"), {}, {}));
       criteria.collectionId = collectionObjectId;
     }
-    if (ingredientId) {
-      const ingredientObjectId = isValidObjectId(ingredientId);
-      if (!ingredientObjectId) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Ingredient"), {}, {}));
-      criteria.ingredientId = ingredientObjectId;
+    if (seasonId) {
+      const seasonObjectId = isValidObjectId(seasonId);
+      if (!seasonObjectId) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Season"), {}, {}));
+      criteria.seasonId = seasonObjectId;
+    }
+    if (scentId) {
+      const scentObjectId = isValidObjectId(scentId);
+      if (!scentObjectId) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Scent"), {}, {}));
+      criteria.scentId = scentObjectId;
+    }
+    if (gender) {
+      criteria.gender = gender;
     }
 
     const dateRange = parseDateRange(startDateFilter, endDateFilter);
