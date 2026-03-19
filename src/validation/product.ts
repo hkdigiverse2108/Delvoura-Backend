@@ -64,6 +64,7 @@ export const getProductsSchema = Joi.object({
   seasonFilter: Joi.alternatives().try(Joi.string(), Joi.array().items(Joi.string())).optional(),
   scentFilter: Joi.alternatives().try(Joi.string(), Joi.array().items(Joi.string())).optional(),
   gender: Joi.string().valid(...Object.values(PRODUCT_GENDERS)).optional(),
+  isTrending: Joi.boolean().optional(),
   startDateFilter: Joi.string().optional(),
   endDateFilter: Joi.string().optional(),
 });
