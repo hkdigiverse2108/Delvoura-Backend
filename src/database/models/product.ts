@@ -17,6 +17,8 @@ export type Product = {
   scentId?: mongoose.Types.ObjectId[];
   usageTips?: string;
   scentStory?: string;
+  scoHost?: string;
+  scoApiKey?: string;
   isTrending?: boolean;
   brandManufacturerInfo?: string;
   isActive?: boolean;
@@ -40,6 +42,8 @@ const productSchema = new mongoose.Schema<Product>(
     scentId: [{ type: mongoose.Schema.Types.ObjectId, ref: "scent" }],
     usageTips: { type: String },
     scentStory: { type: String },
+    scoHost: { type: String },
+    scoApiKey: { type: String },
     brandManufacturerInfo: { type: String },
     isTrending: { type: Boolean, default: false },
     isActive: { type: Boolean, default: true },
