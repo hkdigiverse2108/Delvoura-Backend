@@ -199,7 +199,7 @@ export const getProducts = async (req, res) => {
       criteria.gender = genderValue;
     }
 
-    console.log("genderValue", genderValue, criteria.gender)
+
     const trendingValue = TrendingFilter;
     if (typeof trendingValue !== "undefined") {
       criteria.isTrending = trendingValue;
