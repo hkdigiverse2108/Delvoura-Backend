@@ -14,7 +14,7 @@ export type Product = {
   variants?: string[];
   ingredients?: string[];
   description?: string;
-  scentIds?: string[];
+  scentIds?: mongoose.Types.ObjectId[];
   usageTips?: string;
   scentStory?: string;
   metaTitle?: string;
@@ -41,7 +41,7 @@ const productSchema = new mongoose.Schema<Product>(
     variants: [{ type: String }],
     ingredients: [{ type: String }],
     description: { type: String },
-    scentIds: [{ type: String }],
+    scentIds: [{ type: mongoose.Schema.Types.ObjectId, ref: "scent" }],
     usageTips: { type: String },
     scentStory: { type: String },
     metaTitle: { type: String },

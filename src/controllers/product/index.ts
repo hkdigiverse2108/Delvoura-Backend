@@ -1,5 +1,5 @@
 import { apiResponse, HTTP_STATUS, isValidObjectId, parseDateRange } from "../../common";
-import { collectionModel, productModel, ratingModel, seasonModel, scentModel } from "../../database";
+import { collectionModel, productModel, ratingModel, seasonModel } from "../../database";
 import { aggregateData, countData, createData, findAllWithPopulateWithSorting, findOneAndPopulate, getData, getFirstMatch, reqInfo, responseMessage, updateData } from "../../helper";
 import { createProductSchema, deleteProductSchema, getProductByIdSchema, getProductsSchema, updateProductSchema } from "../../validation";
 
@@ -16,7 +16,7 @@ export const createProduct = async (req, res) => {
 
     const rawCollectionIds = value.collectionIds ?? value.collectionId;
     let collectionIds = Array.isArray(rawCollectionIds) ? rawCollectionIds : (rawCollectionIds ? [rawCollectionIds] : []);
-    collectionIds = Array.from(new Set(collectionIds.map((id) => id?.trim()).filter(Boolean)));
+    collectionIds = Array.from(new Set(collectionIds.filter(Boolean)));
     if (collectionIds.length > 0) {
       const validCollectionIds = collectionIds.map((id) => isValidObjectId(id));
       if (validCollectionIds.some((id) => !id)) {
@@ -31,7 +31,7 @@ export const createProduct = async (req, res) => {
     if ("collectionId" in value) delete value.collectionId;
     const rawSeasonIds = value.seasonIds ?? value.seasonId;
     let seasonIds = Array.isArray(rawSeasonIds) ? rawSeasonIds : (rawSeasonIds ? [rawSeasonIds] : []);
-    seasonIds = Array.from(new Set(seasonIds.map((id) => id?.trim()).filter(Boolean)));
+    seasonIds = Array.from(new Set(seasonIds.filter(Boolean)));
     if (seasonIds.length > 0) {
       const validSeasonIds = seasonIds.map((id) => isValidObjectId(id));
       if (validSeasonIds.some((id) => !id)) {
@@ -46,9 +46,13 @@ export const createProduct = async (req, res) => {
     if ("seasonId" in value) delete value.seasonId;
     const rawScentIds = value.scentIds ?? value.scentId;
     let scentIds = Array.isArray(rawScentIds) ? rawScentIds : (rawScentIds ? [rawScentIds] : []);
-    scentIds = Array.from(new Set(scentIds.map((id) => id?.trim()).filter(Boolean)));
+    scentIds = Array.from(new Set(scentIds.filter(Boolean)));
     if (scentIds.length > 0) {
-      value.scentIds = scentIds;
+      const validScentIds = scentIds.map((id) => isValidObjectId(id));
+      if (validScentIds.some((id) => !id)) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Scent"), {}, {}));
+      }
+      value.scentIds = validScentIds;
     }
     if ("scentId" in value) delete value.scentIds;
 
@@ -77,7 +81,7 @@ export const updateProduct = async (req, res) => {
    
     const rawCollectionIds = value.collectionIds ?? value.collectionId;
     let collectionIds = Array.isArray(rawCollectionIds) ? rawCollectionIds : (rawCollectionIds ? [rawCollectionIds] : []);
-    collectionIds = Array.from(new Set(collectionIds.map((id) => id?.trim()).filter(Boolean)));
+    collectionIds = Array.from(new Set(collectionIds.filter(Boolean)));
     if (collectionIds.length > 0) {
       const validCollectionIds = collectionIds.map((id) => isValidObjectId(id));
       if (validCollectionIds.some((id) => !id)) {
@@ -92,7 +96,7 @@ export const updateProduct = async (req, res) => {
     if ("collectionId" in value) delete value.collectionId;
     const rawSeasonIds = value.seasonIds ?? value.seasonId;
     let seasonIds = Array.isArray(rawSeasonIds) ? rawSeasonIds : (rawSeasonIds ? [rawSeasonIds] : []);
-    seasonIds = Array.from(new Set(seasonIds.map((id) => id?.trim()).filter(Boolean)));
+    seasonIds = Array.from(new Set(seasonIds.filter(Boolean)));
     if (seasonIds.length > 0) {
       const validSeasonIds = seasonIds.map((id) => isValidObjectId(id));
       if (validSeasonIds.some((id) => !id)) {
@@ -107,9 +111,13 @@ export const updateProduct = async (req, res) => {
     if ("seasonId" in value) delete value.seasonId;
     const rawScentIds = value.scentIds ?? value.scentId;
     let scentIds = Array.isArray(rawScentIds) ? rawScentIds : (rawScentIds ? [rawScentIds] : []);
-    scentIds = Array.from(new Set(scentIds.map((id) => id?.trim()).filter(Boolean)));
+    scentIds = Array.from(new Set(scentIds.filter(Boolean)));
     if (scentIds.length > 0) {
-      value.scentIds = scentIds;
+      const validScentIds = scentIds.map((id) => isValidObjectId(id));
+      if (validScentIds.some((id) => !id)) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Scent"), {}, {}));
+      }
+      value.scentIds = validScentIds;
     }
     if ("scentId" in value) delete value.scentId;
 
@@ -144,7 +152,7 @@ export const getProducts = async (req, res) => {
     const { error, value } = getProductsSchema.validate(req.query);
     if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
 
-    const { page, limit, search, startDateFilter, endDateFilter, collectionFilter, seasonFilter, scentFilter, gender, isTrending } = value;
+    const { page, limit, search, startDateFilter, endDateFilter, collectionFilter, seasonFilter, scentFilter, genderFilter, TrendingFilter } = value;
     let criteria: any = { isDeleted: false }, options: any = { lean: true };
 
     if (search) {
@@ -158,7 +166,7 @@ export const getProducts = async (req, res) => {
     let collectionIds: string[] = [];
     if (Array.isArray(collectionFilter)) collectionIds = collectionFilter;
     else if (collectionFilter) collectionIds = collectionFilter.split(",");
-    collectionIds = collectionIds.map((id) => id?.trim()).filter(Boolean);
+    collectionIds = collectionIds.filter(Boolean);
     if (collectionIds.length > 0) {
       const collectionObjectIds = collectionIds.map((id) => isValidObjectId(id)).filter(Boolean);
       if (!collectionObjectIds.length) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Collection"), {}, {}));
@@ -168,7 +176,7 @@ export const getProducts = async (req, res) => {
     let seasonIds: string[] = [];
     if (Array.isArray(seasonFilter)) seasonIds = seasonFilter;
     else if (seasonFilter) seasonIds = seasonFilter.split(",");
-    seasonIds = seasonIds.map((id) => id?.trim()).filter(Boolean);
+    seasonIds = seasonIds.filter(Boolean);
     if (seasonIds.length > 0) {
       const seasonObjectIds = seasonIds.map((id) => isValidObjectId(id)).filter(Boolean);
       if (!seasonObjectIds.length) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Season"), {}, {}));
@@ -178,16 +186,23 @@ export const getProducts = async (req, res) => {
     let scentIds: string[] = [];
     if (Array.isArray(scentFilter)) scentIds = scentFilter;
     else if (scentFilter) scentIds = scentFilter.split(",");
-    scentIds = scentIds.map((name) => name?.trim()).filter(Boolean);
+    scentIds = scentIds.filter(Boolean);
     if (scentIds.length > 0) {
-      const normalized = Array.from(new Set(scentIds));
-      criteria.scentIds = { $in: normalized };
+      const scentObjectIds = scentIds.map((id) => isValidObjectId(id)).filter(Boolean);
+      if (!scentObjectIds.length) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Scent"), {}, {}));
+      }
+      criteria.scentIds = { $in: scentObjectIds };
     }
-    if (gender) {
-      criteria.gender = gender;
+    const genderValue = genderFilter;
+    if (genderValue) {
+      criteria.gender = genderValue;
     }
-    if (typeof isTrending !== "undefined") {
-      criteria.isTrending = isTrending;
+
+    console.log("genderValue", genderValue, criteria.gender)
+    const trendingValue = TrendingFilter;
+    if (typeof trendingValue !== "undefined") {
+      criteria.isTrending = trendingValue;
     }
 
     const dateRange = parseDateRange(startDateFilter, endDateFilter);
@@ -262,4 +277,5 @@ const getRatingSummary = async (productId) => {
 const productPopulate = [
   { path: "collectionIds", select: "name" },
   { path: "seasonIds", select: "name" },
+  { path: "scentIds", select: "name" }
 ];
