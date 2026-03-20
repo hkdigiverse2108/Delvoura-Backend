@@ -7,6 +7,6 @@ const router = Router();
 router.post("/add", adminJwt, collectionController.createCollection);
 router.put("/edit", adminJwt, collectionController.updateCollection);
 router.delete("/:id", adminJwt, collectionController.deleteCollection);
-router.get("/", adminJwt, collectionController.getCollections);
+router.get("/", collectionController.getCollections);
 
 export const collectionRouter = router;

@@ -1,6 +1,10 @@
 import Joi from "joi";
 import { PRODUCT_GENDERS } from "../common";
 
+const scentNameSchema = Joi.string()
+  .pattern(/^(?![a-fA-F0-9]{24}$).+/)
+  .messages({ "string.pattern.base": "scentId must be a name, not an ObjectId" });
+
 export const createProductSchema = Joi.object({
   name: Joi.string().required(),
   title: Joi.string().optional(),
@@ -8,13 +12,13 @@ export const createProductSchema = Joi.object({
   coverimage: Joi.string().optional(),
   price: Joi.number().optional(),
   mrp: Joi.number().optional(),
-  seasonId: Joi.alternatives().try(Joi.string(), Joi.array().items(Joi.string())).optional(),
+  seasonIds: Joi.alternatives().try(Joi.string(), Joi.array().items(Joi.string())).optional(),
   gender: Joi.string().valid(...Object.values(PRODUCT_GENDERS)).optional(),
-  collectionId: Joi.alternatives().try(Joi.string(), Joi.array().items(Joi.string())).optional(),
-  variant: Joi.array().items(Joi.string()).optional(),
-  ingredient: Joi.array().items(Joi.string()).optional(),
+  collectionIds: Joi.alternatives().try(Joi.string(), Joi.array().items(Joi.string())).optional(),
+  variants: Joi.array().items(Joi.string()).optional(),
+  ingredients: Joi.array().items(Joi.string()).optional(),
   description: Joi.string().optional(),
-  scentId: Joi.alternatives().try(Joi.string(), Joi.array().items(Joi.string())).optional(),
+  scentIds: Joi.alternatives().try(Joi.string(), Joi.array().items(Joi.string())).optional(),
   usageTips: Joi.string().optional(),
   scentStory: Joi.string().optional(),
   metaTitle: Joi.string().optional(),
@@ -34,13 +38,15 @@ export const updateProductSchema = Joi.object({
   coverimage: Joi.string().optional(),
   price: Joi.number().optional(),
   mrp: Joi.number().optional(),
-  seasonId: Joi.alternatives().try(Joi.string(), Joi.array().items(Joi.string())).optional(),
+  seasonIds: Joi.alternatives().try(Joi.string(), Joi.array().items(Joi.string())).optional(),
   gender: Joi.string().valid(...Object.values(PRODUCT_GENDERS)).optional(),
   collectionId: Joi.alternatives().try(Joi.string(), Joi.array().items(Joi.string())).optional(),
-  variant: Joi.array().items(Joi.string()).optional(),
-  ingredient: Joi.array().items(Joi.string()).optional(),
+  collectionIds: Joi.alternatives().try(Joi.string(), Joi.array().items(Joi.string())).optional(),
+  variants: Joi.array().items(Joi.string()).optional(),
+  ingredients: Joi.array().items(Joi.string()).optional(),
   description: Joi.string().optional(),
-  scentId: Joi.alternatives().try(Joi.string(), Joi.array().items(Joi.string())).optional(),
+  scentId: Joi.alternatives().try(scentNameSchema, Joi.array().items(scentNameSchema)).optional(),
+  scentIds: Joi.alternatives().try(Joi.string(), Joi.array().items(Joi.string())).optional(),
   usageTips: Joi.string().optional(),
   scentStory: Joi.string().optional(),
   metaTitle: Joi.string().optional(),

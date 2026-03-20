@@ -7,6 +7,6 @@ const router = Router();
 router.post("/add", adminJwt, scentController.createScent);
 router.put("/edit", adminJwt, scentController.updateScent);
 router.delete("/:id", adminJwt, scentController.deleteScent);
-router.get("/", adminJwt, scentController.getScents);
+router.get("/", scentController.getScents);
 
 export const scentRouter = router;

@@ -7,6 +7,6 @@ const router = Router();
 router.post("/add", adminJwt, seasonController.createSeason);
 router.put("/edit", adminJwt, seasonController.updateSeason);
 router.delete("/:id", adminJwt, seasonController.deleteSeason);
-router.get("/", adminJwt, seasonController.getSeasons);
+router.get("/", seasonController.getSeasons);
 
 export const seasonRouter = router;
