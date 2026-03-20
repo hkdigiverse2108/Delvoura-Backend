@@ -189,9 +189,7 @@ export const getProducts = async (req, res) => {
     scentIds = scentIds.filter(Boolean);
     if (scentIds.length > 0) {
       const scentObjectIds = scentIds.map((id) => isValidObjectId(id)).filter(Boolean);
-      if (!scentObjectIds.length) {
-        return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Scent"), {}, {}));
-      }
+      if (!scentObjectIds.length) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Scent"), {}, {}));
       criteria.scentIds = { $in: scentObjectIds };
     }
     const genderValue = genderFilter;
@@ -245,9 +243,7 @@ export const getProductById = async (req, res) => {
 
     const ratingSummary = await getRatingSummary(product._id);
 
-    return res.status(HTTP_STATUS.OK).json(
-      new apiResponse(HTTP_STATUS.OK, responseMessage.getDataSuccess("Product"), { ...product, ratingSummary }, {})
-    );
+    return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.getDataSuccess("Product"), { ...product, ratingSummary }, {}));
   } catch (error) {
     console.log(error);
     return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.internalServerError, {}, error));
@@ -257,14 +253,7 @@ export const getProductById = async (req, res) => {
 const getRatingSummary = async (productId) => {
   const ratingStats = await aggregateData(ratingModel, [
     { $match: { productId, isDeleted: false } },
-    {
-      $group: {
-        _id: "$productId",
-        avgRating: { $avg: "$starRating" },
-        ratingCount: { $sum: 1 },
-      },
-    },
-  ]);
+    {$group: {_id: "$productId",avgRating: { $avg: "$starRating" }, ratingCount: { $sum: 1 },},},]);
 
   if (!ratingStats?.length) return { avgRating: 0, ratingCount: 0 };
 
