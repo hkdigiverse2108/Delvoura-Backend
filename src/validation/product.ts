@@ -56,6 +56,10 @@ export const deleteProductSchema = Joi.object({
   id: Joi.string().required(),
 });
 
+export const getProductByIdSchema = Joi.object({
+  id: Joi.string().required(),
+});
+
 export const getProductsSchema = Joi.object({
   page: Joi.number().optional(),
   limit: Joi.number().optional(),

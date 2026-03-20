@@ -1,7 +1,7 @@
 import { apiResponse, HTTP_STATUS, isValidObjectId, parseDateRange } from "../../common";
 import { collectionModel, productModel, ratingModel, seasonModel, scentModel } from "../../database";
 import { aggregateData, countData, createData, findAllWithPopulateWithSorting, findOneAndPopulate, getData, getFirstMatch, reqInfo, responseMessage, updateData } from "../../helper";
-import { createProductSchema, deleteProductSchema, getProductsSchema, updateProductSchema } from "../../validation";
+import { createProductSchema, deleteProductSchema, getProductByIdSchema, getProductsSchema, updateProductSchema } from "../../validation";
 
 export const createProduct = async (req, res) => {
   reqInfo(req);
@@ -219,7 +219,7 @@ export const getProducts = async (req, res) => {
 export const getProductById = async (req, res) => {
   reqInfo(req);
   try {
-    const { error, value } = deleteProductSchema.validate(req.params);
+    const { error, value } = getProductByIdSchema.validate(req.params);
     if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
 
     const product = await findOneAndPopulate(productModel, { _id: isValidObjectId(value.id), isDeleted: false }, {}, {}, productPopulate);

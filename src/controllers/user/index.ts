@@ -1,7 +1,7 @@
 import { apiResponse, generateHash, HTTP_STATUS, isValidObjectId, parseDateRange, USER_ROLES } from "../../common";
 import { userModel } from "../../database";
 import { countData, getDataWithSorting, getFirstMatch, reqInfo, responseMessage, updateData, } from "../../helper";
-import { deleteUserSchema, getUsersSchema, updateUserSchema } from "../../validation";
+import { deleteUserSchema, getUserByIdSchema, getUsersSchema, updateUserSchema } from "../../validation";
 
 export const updateUser = async (req, res) => {
   reqInfo(req);
@@ -51,7 +51,7 @@ export const getUsers = async (req, res) => {
     if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
 
     const { page, limit, search, startDateFilter, endDateFilter } = value
-    let criteria: any = { role: USER_ROLES.USER, isDeleted: false }, options: any = { lean: true }
+    let criteria: any = { roles: USER_ROLES.USER, isDeleted: false }, options: any = { lean: true }
 
     if (search) {
       criteria.$or = [
@@ -63,9 +63,8 @@ export const getUsers = async (req, res) => {
     }
 
     const dateRange = parseDateRange(startDateFilter, endDateFilter);
-    if (startDateFilter && endDateFilter && !dateRange) {
-      return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.customMessage("Invalid date filter"), {}, {}));
-    }
+    if (startDateFilter && endDateFilter && !dateRange) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.customMessage("Invalid date filter"), {}, {}));
+    
     if (dateRange) {
       criteria.createdAt = { $gte: dateRange.startDate, $lte: dateRange.endDate };
     }
@@ -94,7 +93,7 @@ export const getUsers = async (req, res) => {
 export const getUserById = async (req, res) => {
   reqInfo(req);
   try {
-    const { error, value } = deleteUserSchema.validate(req.params);
+    const { error, value } = getUserByIdSchema.validate(req.params);
     if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
 
     const userId = isValidObjectId(value.id);
@@ -109,6 +108,3 @@ export const getUserById = async (req, res) => {
     return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.internalServerError, {}, error));
   }
 };
-
-
-

@@ -2,13 +2,13 @@ import mongoose from "mongoose";
 
 export type Settings = {
   logo?: string;
-  razorpayKey?: string;
-  razorpaySecret?: string;
-  phonepeKey?: string;
-  phonepeSecret?: string;
-  enrolledLearners?: number;
-  classCompleted?: number;
-  satisfactionRate?: number;
+  isRazorpay?: boolean;
+  razorpayApiKey?: string | null;
+  razorpayApiSecret?: string | null;
+  isPhonePe?: boolean;
+  phonePeApiKey?: string | null;
+  phonePeApiSecret?: string | null;
+  phonePeVersion?: string | null;
   link?: string | null;
   address?: string | null;
   phoneNumber?: string | null;
@@ -25,13 +25,13 @@ export type Settings = {
 const settingsSchema = new mongoose.Schema<Settings>(
   {
     logo: { type: String },
-    razorpayKey: { type: String },
-    razorpaySecret: { type: String },
-    phonepeKey: { type: String },
-    phonepeSecret: { type: String },
-    enrolledLearners: { type: Number, default: 0 },
-    classCompleted: { type: Number, default: 0 },
-    satisfactionRate: { type: Number, default: 0 },
+    isRazorpay: { type: Boolean, default: false },
+    razorpayApiKey: { type: String, default: null },
+    razorpayApiSecret: { type: String, default: null },
+    isPhonePe: { type: Boolean, default: false },
+    phonePeApiKey: { type: String, default: null },
+    phonePeApiSecret: { type: String, default: null },
+    phonePeVersion: { type: String, default: null },
     link: { type: String, default: null },
     address: { type: String, default: null },
     phoneNumber: { type: String, default: null },

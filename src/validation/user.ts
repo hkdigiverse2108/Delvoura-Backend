@@ -19,6 +19,10 @@ export const deleteUserSchema = Joi.object({
   id: Joi.string().required(),
 })
 
+export const getUserByIdSchema = Joi.object({
+  id: Joi.string().required(),
+})
+
 export const getUsersSchema = Joi.object({
   page: Joi.number().optional(),
   limit: Joi.number().optional(),
