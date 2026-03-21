@@ -68,13 +68,17 @@ export const getCollections = async (req, res) => {
     const { error, value } = getCollectionsSchema.validate(req.query)
     if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
     
-    const { page, limit, search, startDateFilter, endDateFilter, ActiveFilter } = value
+    const { page, limit, search, startDateFilter, endDateFilter, ActiveFilter, status } = value
     let criteria: any = { isDeleted: false }, options: any = { lean: true }
 
     if (search) {criteria.$or = [{ name: { $regex: search, $options: 'si' } },]}
 
     if (typeof ActiveFilter !== "undefined") {
       criteria.isActive = ActiveFilter;
+    } else if (status === "active") {
+      criteria.isActive = true;
+    } else if (status === "inactive") {
+      criteria.isActive = false;
     }
 
     const dateRange = parseDateRange(startDateFilter, endDateFilter);

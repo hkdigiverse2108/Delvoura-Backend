@@ -5,5 +5,6 @@ export const deleteImageSchema = Joi.object().keys({
 });
 
 export const uploadImageSchema = Joi.object().keys({
-  file: Joi.any().required(),
+  file: Joi.any().optional(),
+  files: Joi.any().optional(),
 });

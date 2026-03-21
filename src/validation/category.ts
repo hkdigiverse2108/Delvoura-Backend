@@ -20,6 +20,7 @@ export const getCategoriesSchema = Joi.object({
   limit: Joi.number().optional(),
   search: Joi.string().optional(),
   ActiveFilter: Joi.boolean().optional(),
+  status: Joi.string().valid("active", "inactive").lowercase().optional(),
   startDateFilter: Joi.string().optional(),
   endDateFilter: Joi.string().optional(),
 })
