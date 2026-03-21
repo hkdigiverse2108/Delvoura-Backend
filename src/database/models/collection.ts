@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 
 export type Collection = {
   name: string;
+  image?: string;
   isActive?: boolean;
   isDeleted?: boolean;
 };
@@ -9,6 +10,7 @@ export type Collection = {
 const collectionSchema = new mongoose.Schema<Collection>(
   {
     name: { type: String, required: true },
+    image: { type: String },
     isActive: { type: Boolean, default: true },
     isDeleted: { type: Boolean, default: false },
   },

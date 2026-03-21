@@ -220,9 +220,31 @@ export const getProducts = async (req, res) => {
     const response = await findAllWithPopulateWithSorting(productModel, criteria, {}, options, productPopulate);
     const totalCount = await countData(productModel, criteria);
 
+    const productIds = response.map((product) => product?._id).filter(Boolean);
+    const ratingSummaryMap = new Map<string, { avgRating: number; ratingCount: number }>();
+
+    if (productIds.length > 0) {
+      const ratingStats = await aggregateData(ratingModel, [
+        { $match: { productId: { $in: productIds }, isDeleted: false } },
+        { $group: { _id: "$productId", avgRating: { $avg: "$starRating" }, ratingCount: { $sum: 1 } } },
+      ]);
+
+      ratingStats.forEach((stat) => {
+        ratingSummaryMap.set(String(stat._id), {
+          avgRating: Number(stat.avgRating?.toFixed(2) || 0),
+          ratingCount: stat.ratingCount || 0,
+        });
+      });
+    }
+
+    const enrichedResponse = response.map((product) => ({
+      ...product,
+      ratingSummary: ratingSummaryMap.get(String(product?._id)) || { avgRating: 0, ratingCount: 0 },
+    }));
+
     const stateObj = getPaginationState(totalCount, pageValue, limitValue);
 
-    return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.getDataSuccess("Products"), { product_data: response, totalData: totalCount, state: stateObj, }, {}));
+    return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.getDataSuccess("Products"), { product_data: enrichedResponse, totalData: totalCount, state: stateObj, }, {}));
   } catch (error) {
     console.log(error);
     return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.internalServerError, {}, error));

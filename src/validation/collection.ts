@@ -2,12 +2,14 @@ import Joi from "joi";
 
 export const createCollectionSchema = Joi.object({
   name: Joi.string().required(),
+  image: Joi.string().optional(),
   isActive: Joi.boolean().optional(),
 });
 
 export const updateCollectionSchema = Joi.object({
   collectionId: Joi.string().required(),
   name: Joi.string().required(),
+  image: Joi.string().optional(),
   isActive: Joi.boolean().optional(),
 });
 
