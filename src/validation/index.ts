@@ -11,3 +11,4 @@ export * from "./topbar";
 export * from "./instagram";
 export * from "./product";
 export * from "./rating";
+export * from "./phonepe";

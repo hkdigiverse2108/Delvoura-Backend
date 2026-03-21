@@ -1,0 +1,135 @@
+import axios from "axios";
+import { apiResponse, HTTP_STATUS } from "../../common";
+import { getPhonePeAccessToken, getPhonePeRedirectUrls, getPhonePeUrl, reqInfo, responseMessage } from "../../helper";
+import { createPhonePePaymentSchema, phonePeOrderStatusSchema, phonePeRefundSchema, phonePeRefundStatusSchema } from "../../validation";
+
+const generateMerchantOrderId = () => {
+  const rand = Math.floor(100000 + Math.random() * 900000);
+  return `order_${Date.now()}_${rand}`;
+};
+
+export const create_phonepe_payment = async (req, res) => {
+  reqInfo(req);
+  try {
+    const { error, value } = createPhonePePaymentSchema.validate(req.body || {});
+    if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
+    
+
+    const { amount, expireAfter, message, metaInfo, redirectUrl, callbackUrl } = value;
+    const merchantOrderId = value.merchantOrderId || generateMerchantOrderId();
+
+    const { redirectUrl: fallbackRedirectUrl, callbackUrl: fallbackCallbackUrl } = getPhonePeRedirectUrls();
+    const finalRedirectUrl = redirectUrl || fallbackRedirectUrl;
+    const finalCallbackUrl = callbackUrl || fallbackCallbackUrl;
+
+    if (!finalRedirectUrl) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.customMessage("Redirect URL is required"), {}, {}));
+
+    const payload: any = {
+      merchantOrderId,
+      amount,
+      expireAfter: expireAfter ?? 1200,
+      paymentFlow: {
+        type: "PG_CHECKOUT",
+        message: message || "Payment",
+        merchantUrls: {
+          redirectUrl: finalRedirectUrl,
+        },
+      },
+    };
+
+    if (finalCallbackUrl) {
+      payload.paymentFlow.merchantUrls.callbackUrl = finalCallbackUrl;
+    }
+
+    if (metaInfo) {
+      payload.metaInfo = metaInfo;
+    }
+
+    const token = await getPhonePeAccessToken();
+    const response = await axios.post(getPhonePeUrl("/checkout/v2/pay"), payload, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `O-Bearer ${token}`,
+      },
+    });
+
+    return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK,responseMessage.customMessage("Payment initiated"),{ merchantOrderId, phonepe: response.data },{}));
+  } catch (error: any) {
+    const errorPayload = error?.response?.data || error;
+    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.internalServerError, {}, errorPayload));
+  }
+};
+
+export const phonepe_order_status = async (req, res) => {
+  reqInfo(req);
+  try {
+    const { error, value } = phonePeOrderStatusSchema.validate(req.params || {});
+    if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
+    
+
+    const token = await getPhonePeAccessToken();
+    const response = await axios.get(getPhonePeUrl(`/checkout/v2/order/${value.merchantOrderId}/status`), {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `O-Bearer ${token}`,
+      },
+    });
+
+    return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.getDataSuccess("order status"), response.data, {}));
+  } catch (error: any) {
+    const errorPayload = error?.response?.data || error;
+    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.internalServerError, {}, errorPayload));
+  }
+};
+
+export const phonepe_refund = async (req, res) => {
+  reqInfo(req);
+  try {
+    const { error, value } = phonePeRefundSchema.validate(req.body || {});
+    if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
+
+    const token = await getPhonePeAccessToken();
+    const response = await axios.post(getPhonePeUrl("/payments/v2/refund"), value, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `O-Bearer ${token}`,
+      },
+    });
+
+    return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.customMessage("Refund initiated"), response.data, {}));
+  } catch (error: any) {
+    const errorPayload = error?.response?.data || error;
+    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.internalServerError, {}, errorPayload));
+  }
+};
+
+export const phonepe_refund_status = async (req, res) => {
+  reqInfo(req);
+  try {
+    const { error, value } = phonePeRefundStatusSchema.validate(req.params || {});
+    if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
+
+    const token = await getPhonePeAccessToken();
+    const response = await axios.get(getPhonePeUrl(`/payments/v2/refund/${value.merchantRefundId}/status`), {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `O-Bearer ${token}`,
+      },
+    });
+
+    return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.getDataSuccess("refund status"), response.data, {}));
+  } catch (error: any) {
+    const errorPayload = error?.response?.data || error;
+    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.internalServerError, {}, errorPayload));
+  }
+};
+
+export const phonepe_callback = async (req, res) => {
+  reqInfo(req);
+  return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.customMessage("Callback received"), { body: req.body, query: req.query }, {}));
+};
+
+export const phonepe_redirect = async (req, res) => {
+  reqInfo(req);
+  return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.customMessage("Redirect received"), { query: req.query }, {}));
+};

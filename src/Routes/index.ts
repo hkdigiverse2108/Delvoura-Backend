@@ -11,6 +11,7 @@ import { topbarRouter } from "./topbar";
 import { instagramRouter } from "./instagram";
 import { productRouter } from "./product";
 import { ratingRouter } from "./rating";
+import { phonepeRouter } from "./phonepe";
 
 const router = Router();
 
@@ -26,5 +27,6 @@ router.use("/topbar", topbarRouter);
 router.use("/instagram", instagramRouter);
 router.use("/product", productRouter);
 router.use("/rating", ratingRouter);
+router.use("/phonepe", phonepeRouter);
 
 export { router };

@@ -8,7 +8,7 @@ export const addEditSettingsSchema = Joi.object({
   isPhonePe: Joi.boolean().optional(),
   phonePeApiKey: Joi.string().allow(null, "").optional(),
   phonePeApiSecret: Joi.string().allow(null, "").optional(),
-  phonePeVersion: Joi.string().allow(null, "").optional(),
+  phonePeVersion: Joi.alternatives().try(Joi.string().allow(null, ""), Joi.number()).optional(),
   link: Joi.string().allow(null, "").optional(),
   address: Joi.string().allow(null, "").optional(),
   phoneNumber: Joi.string().allow(null, "").optional(),
