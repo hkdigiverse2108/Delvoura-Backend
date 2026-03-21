@@ -8,16 +8,15 @@ export const fileStorage = multer.diskStorage({
       const isImage = file.mimetype.startsWith("image/");
 
       if (!isImage) {
-        return cb(new Error("Only image files are allowed"),"");
+        return cb(new Error("Only image files are allowed"), "");
       }
 
-      //
       let folderName = "others";
 
       if (req.baseUrl.includes("product")) {
-        folderName = "products"; 
+        folderName = "products";
       } else if (req.baseUrl.includes("blog")) {
-        folderName = "blogs"; 
+        folderName = "blogs";
       }
 
       const baseDir = "public/images";
@@ -29,7 +28,7 @@ export const fileStorage = multer.diskStorage({
 
       cb(null, path.join(baseDir, folderName));
     } catch (error) {
-      cb(error,"");
+      cb(error, "");
     }
   },
 
@@ -38,7 +37,7 @@ export const fileStorage = multer.diskStorage({
       const sanitizedOriginalName = file.originalname.replace(/\s+/g, "-");
       cb(null, `${Date.now()}_${sanitizedOriginalName}`);
     } catch (error) {
-      cb(error,"");
+      cb(error, "");
     }
   },
 });

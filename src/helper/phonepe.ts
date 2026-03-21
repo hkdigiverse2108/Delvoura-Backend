@@ -5,14 +5,65 @@ type PhonePeTokenCache = {
   expiresAt: number;
 };
 
+export type PhonePeAmountUnit = "PAISE" | "RUPEES";
+
 let phonePeTokenCache: PhonePeTokenCache | null = null;
 
 const DEFAULT_PHONEPE_BASE_URL = "https://api-preprod.phonepe.com/apis/pg-sandbox";
+const DEFAULT_PHONEPE_AMOUNT_UNIT: PhonePeAmountUnit = "RUPEES";
 
 const logPhonePeDebug = (...args: any[]) => {
   if (process.env.PHONEPE_DEBUG === "true") {
     console.log("[PhonePe]", ...args);
   }
+};
+
+const normalizePhonePeAmountUnit = (unit?: string | null): PhonePeAmountUnit | undefined => {
+  if (!unit) return undefined;
+  const normalized = unit.trim().toUpperCase();
+
+  if (normalized === "PAISE" || normalized === "PAISA") return "PAISE";
+  if (normalized === "RUPEES" || normalized === "RUPEE" || normalized === "INR") return "RUPEES";
+
+  return undefined;
+};
+
+export const resolvePhonePeAmountUnit = (requestUnit?: string | null): PhonePeAmountUnit => {
+  const normalizedRequestUnit = normalizePhonePeAmountUnit(requestUnit);
+  if (normalizedRequestUnit) return normalizedRequestUnit;
+
+  const envUnit = normalizePhonePeAmountUnit(process.env.PHONEPE_AMOUNT_UNIT);
+  if (envUnit) return envUnit;
+
+  if (process.env.PHONEPE_AMOUNT_UNIT) {
+    logPhonePeDebug("Unknown PHONEPE_AMOUNT_UNIT, falling back to default", process.env.PHONEPE_AMOUNT_UNIT);
+  }
+
+  return DEFAULT_PHONEPE_AMOUNT_UNIT;
+};
+
+export const normalizePhonePeAmount = (amount: number, unit: PhonePeAmountUnit) => {
+  if (!Number.isFinite(amount)) {
+    throw new Error("Amount must be a valid number");
+  }
+  if (amount <= 0) {
+    throw new Error("Amount must be greater than 0");
+  }
+
+  if (unit === "PAISE") {
+    if (!Number.isInteger(amount)) {
+      throw new Error("Amount must be an integer when amountUnit is PAISE");
+    }
+    return amount;
+  }
+
+  const paise = Math.round((amount + Number.EPSILON) * 100);
+  const normalized = paise / 100;
+  if (Math.abs(normalized - amount) > 1e-6) {
+    throw new Error("Amount can have at most 2 decimal places when amountUnit is RUPEES");
+  }
+
+  return paise;
 };
 
 const normalizePhonePeBaseUrl = (baseUrl: string) => {
@@ -32,7 +83,7 @@ const normalizePhonePeBaseUrl = (baseUrl: string) => {
       return `${trimmed}/apis/pg`;
     }
   } catch {
-    // If URL parsing fails, return as-is so caller can surface an error from PhonePe.
+
   }
 
   return trimmed;

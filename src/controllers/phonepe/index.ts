@@ -1,6 +1,6 @@
 import axios from "axios";
 import { apiResponse, HTTP_STATUS } from "../../common";
-import { getPhonePeAccessToken, getPhonePeRedirectUrls, getPhonePeUrl, reqInfo, responseMessage } from "../../helper";
+import { getPhonePeAccessToken, getPhonePeRedirectUrls, getPhonePeUrl, normalizePhonePeAmount, reqInfo, resolvePhonePeAmountUnit, responseMessage } from "../../helper";
 import { createPhonePePaymentSchema, phonePeOrderStatusSchema, phonePeRefundSchema, phonePeRefundStatusSchema } from "../../validation";
 
 const generateMerchantOrderId = () => {
@@ -15,7 +15,7 @@ export const create_phonepe_payment = async (req, res) => {
     if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
     
 
-    const { amount, expireAfter, message, metaInfo, redirectUrl, callbackUrl } = value;
+    const { amount, amountUnit, expireAfter, message, metaInfo, redirectUrl, callbackUrl } = value;
     const merchantOrderId = value.merchantOrderId || generateMerchantOrderId();
 
     const { redirectUrl: fallbackRedirectUrl, callbackUrl: fallbackCallbackUrl } = getPhonePeRedirectUrls();
@@ -24,9 +24,19 @@ export const create_phonepe_payment = async (req, res) => {
 
     if (!finalRedirectUrl) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.customMessage("Redirect URL is required"), {}, {}));
 
+    let normalizedAmount: number;
+    try {
+      const resolvedUnit = resolvePhonePeAmountUnit(amountUnit);
+      normalizedAmount = normalizePhonePeAmount(amount, resolvedUnit);
+    } catch (amountError: any) {
+      return res
+        .status(HTTP_STATUS.BAD_REQUEST)
+        .json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.customMessage(amountError?.message || "Invalid amount"), {}, {}));
+    }
+
     const payload: any = {
       merchantOrderId,
-      amount,
+      amount: normalizedAmount,
       expireAfter: expireAfter ?? 1200,
       paymentFlow: {
         type: "PG_CHECKOUT",
@@ -88,8 +98,19 @@ export const phonepe_refund = async (req, res) => {
     const { error, value } = phonePeRefundSchema.validate(req.body || {});
     if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
 
+    const { amount, amountUnit, ...refundPayload } = value;
+    let normalizedAmount: number;
+    try {
+      const resolvedUnit = resolvePhonePeAmountUnit(amountUnit);
+      normalizedAmount = normalizePhonePeAmount(amount, resolvedUnit);
+    } catch (amountError: any) {
+      return res
+        .status(HTTP_STATUS.BAD_REQUEST)
+        .json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.customMessage(amountError?.message || "Invalid amount"), {}, {}));
+    }
+
     const token = await getPhonePeAccessToken();
-    const response = await axios.post(getPhonePeUrl("/payments/v2/refund"), value, {
+    const response = await axios.post(getPhonePeUrl("/payments/v2/refund"), { ...refundPayload, amount: normalizedAmount }, {
       headers: {
         "Content-Type": "application/json",
         Authorization: `O-Bearer ${token}`,

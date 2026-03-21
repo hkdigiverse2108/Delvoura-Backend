@@ -3,6 +3,7 @@ import Joi from "joi";
 export const createPhonePePaymentSchema = Joi.object({
   merchantOrderId: Joi.string().optional(),
   amount: Joi.number().required(),
+  amountUnit: Joi.string().trim().uppercase().valid("PAISE", "RUPEES").optional(),
   expireAfter: Joi.number().optional(),
   redirectUrl: Joi.string().uri().optional(),
   callbackUrl: Joi.string().uri().optional(),
@@ -24,6 +25,7 @@ export const phonePeRefundSchema = Joi.object({
   merchantRefundId: Joi.string().required(),
   originalMerchantOrderId: Joi.string().required(),
   amount: Joi.number().required(),
+  amountUnit: Joi.string().trim().uppercase().valid("PAISE", "RUPEES").optional(),
 });
 
 export const phonePeRefundStatusSchema = Joi.object({
