@@ -152,7 +152,7 @@ export const getProducts = async (req, res) => {
     const { error, value } = getProductsSchema.validate(req.query);
     if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
 
-    const { page, limit, search, startDateFilter, endDateFilter, collectionFilter, seasonFilter, scentFilter, genderFilter, TrendingFilter } = value;
+    const { page, limit, search, startDateFilter, endDateFilter, collectionFilter, seasonFilter, scentFilter, genderFilter, TrendingFilter, ActiveFilter } = value;
     let criteria: any = { isDeleted: false }, options: any = { lean: true };
 
     if (search) {
@@ -162,6 +162,10 @@ export const getProducts = async (req, res) => {
         { gender: { $regex: search, $options: "si" } },
         { variant: { $regex: search, $options: "si" } },
       ];
+    }
+
+    if (typeof ActiveFilter !== "undefined") {
+      criteria.isActive = ActiveFilter;
     }
     let collectionIds: string[] = [];
     if (Array.isArray(collectionFilter)) collectionIds = collectionFilter;
