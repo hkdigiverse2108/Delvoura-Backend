@@ -6,12 +6,14 @@ export type Product = {
   title?: string;
   images?: string[];
   coverimage?: string;
-  price?: number;
   mrp?: number;
   seasonIds?: mongoose.Types.ObjectId[];
   gender?: string;
   collectionIds?: mongoose.Types.ObjectId[];
-  variants?: string[];
+  variants?: {
+    size: string;
+    price?: number;
+  }[];
   ingredients?: string[];
   description?: string;
   scentIds?: mongoose.Types.ObjectId[];
@@ -33,12 +35,16 @@ const productSchema = new mongoose.Schema<Product>(
     title: { type: String },
     images: [{ type: String }],
     coverimage: { type: String },
-    price: { type: Number },
     mrp: { type: Number },
     seasonIds: [{ type: mongoose.Schema.Types.ObjectId, ref: "season" }],
     gender: { type: String, enum: Object.values(PRODUCT_GENDERS), default: PRODUCT_GENDERS.UNISEX },
     collectionIds: [{ type: mongoose.Schema.Types.ObjectId, ref: "collection" }],
-    variants: [{ type: String }],
+    variants: [
+      {
+        size: { type: String, required: true },
+        price: { type: Number },
+      },
+    ],
     ingredients: [{ type: String }],
     description: { type: String },
     scentIds: [{ type: mongoose.Schema.Types.ObjectId, ref: "scent" }],

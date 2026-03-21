@@ -290,6 +290,7 @@ const getRatingSummary = async (productId) => {
   };
 };
 
+
 const productPopulate = [
   { path: "collectionIds", select: "name" },
   { path: "seasonIds", select: "name" },
