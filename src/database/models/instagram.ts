@@ -11,7 +11,6 @@ export type Instagram = {
 
 const instagramSchema = new mongoose.Schema<Instagram>(
   {
-
     imageUrl: { type: String, required: true },
     link: { type: String, required: true },
     videoUrl: { type: String, default: null },

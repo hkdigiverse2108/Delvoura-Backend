@@ -1,4 +1,4 @@
-import { apiResponse, HTTP_STATUS, isValidObjectId, parseDateRange } from "../../common";
+import { apiResponse, getPaginationState, HTTP_STATUS, isValidObjectId, parseDateRange, resolvePagination } from "../../common";
 import { collectionModel } from "../../database";
 import { countData, createData, getDataWithSorting, getFirstMatch, reqInfo, responseMessage, updateData } from "../../helper";
 import { createCollectionSchema, deleteCollectionSchema, getCollectionsSchema, updateCollectionSchema } from "../../validation";
@@ -81,16 +81,16 @@ export const getCollections = async (req, res) => {
       criteria.createdAt = { $gte: dateRange.startDate, $lte: dateRange.endDate };
     }
 
-    if (page && limit) {options.page = parseInt(page) ,options.limit = parseInt(limit)}
+    const { page: pageValue, limit: limitValue, skip, hasLimit } = resolvePagination(page, limit);
+    if (hasLimit) {
+      options.skip = skip;
+      options.limit = limitValue;
+    }
 
     const response = await getDataWithSorting(collectionModel, criteria, {}, options)
     const totalCount = await countData(collectionModel, criteria)
 
-    const stateObj = {
-      page: parseInt(page) || 1,
-      limit: parseInt(limit) || totalCount,
-      page_limit: Math.ceil(totalCount / (parseInt(limit) || totalCount)) || 1,
-    }
+    const stateObj = getPaginationState(totalCount, pageValue, limitValue);
 
     return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.getDataSuccess("Collections"), {collection_data: response,totalData: totalCount,state: stateObj}, {}));
   } catch (error) {

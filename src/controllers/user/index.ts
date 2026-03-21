@@ -1,4 +1,4 @@
-import { apiResponse, generateHash, HTTP_STATUS, isValidObjectId, parseDateRange, USER_ROLES } from "../../common";
+import { apiResponse, generateHash, getPaginationState, HTTP_STATUS, isValidObjectId, parseDateRange, resolvePagination, USER_ROLES } from "../../common";
 import { userModel } from "../../database";
 import { countData, getDataWithSorting, getFirstMatch, reqInfo, responseMessage, updateData, } from "../../helper";
 import { deleteUserSchema, getUserByIdSchema, getUsersSchema, updateUserSchema } from "../../validation";
@@ -69,19 +69,16 @@ export const getUsers = async (req, res) => {
       criteria.createdAt = { $gte: dateRange.startDate, $lte: dateRange.endDate };
     }
 
-    if (page && limit) {
-      options.page = parseInt(page)
-      options.limit = parseInt(limit)
+    const { page: pageValue, limit: limitValue, skip, hasLimit } = resolvePagination(page, limit);
+    if (hasLimit) {
+      options.skip = skip;
+      options.limit = limitValue;
     }
 
     const response = await getDataWithSorting(userModel, criteria, {}, options)
     const totalCount = await countData(userModel, criteria)
 
-    const stateObj = {
-      page: parseInt(page) || 1,
-      limit: parseInt(limit) || totalCount,
-      page_limit: Math.ceil(totalCount / (parseInt(limit) || totalCount)) || 1,
-    }
+    const stateObj = getPaginationState(totalCount, pageValue, limitValue);
 
     return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.getDataSuccess("Users"), {user_data: response,totalData: totalCount,state: stateObj}, {}));
   } catch (error) {

@@ -67,3 +67,25 @@ export const parseDateRange = (start?: any, end?: any) => {
 
   return { startDate, endDate };
 };
+
+export const resolvePagination = (page?: any, limit?: any) => {
+  const parsedLimit = Number(limit);
+  const hasLimit = Number.isFinite(parsedLimit) && parsedLimit > 0;
+  const limitValue = hasLimit ? Math.floor(parsedLimit) : 0;
+
+  const parsedPage = Number(page);
+  const pageValue = hasLimit ? Math.max(Math.floor(parsedPage || 1), 1) : 1;
+  const skip = hasLimit ? (pageValue - 1) * limitValue : 0;
+
+  return { page: pageValue, limit: limitValue, skip, hasLimit };
+};
+
+export const getPaginationState = (totalCount: number, pageValue: number, limitValue: number) => {
+  const pageLimit = limitValue > 0 ? Math.ceil(totalCount / limitValue) || 1 : 1;
+
+  return {
+    page: pageValue,
+    limit: limitValue > 0 ? limitValue : totalCount,
+    page_limit: pageLimit,
+  };
+};
