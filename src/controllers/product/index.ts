@@ -70,11 +70,14 @@ export const updateProduct = async (req, res) => {
     const { error, value } = updateProductSchema.validate(req.body || {});
     if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
 
-    const existing = await getFirstMatch(productModel, { _id: isValidObjectId(value.productId), isDeleted: false }, {}, {});
+    const productId = isValidObjectId(value.productId);
+    if (!productId) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Product"), {}, {}));
+
+    const existing = await getFirstMatch(productModel, { _id: productId, isDeleted: false }, {}, {});
     if (!existing) return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("Product"), {}, {}));
 
     const nameValue = value.name;
-    const isExist = await getFirstMatch(productModel,{ name: nameValue, _id: { $ne: isValidObjectId(value.productId) }, isDeleted: false },{},{} );
+    const isExist = await getFirstMatch(productModel,{ name: nameValue, _id: { $ne: productId }, isDeleted: false },{},{} );
     if (isExist) return res.status(HTTP_STATUS.CONFLICT).json(new apiResponse(HTTP_STATUS.CONFLICT, responseMessage.dataAlreadyExist("Name"), {}, {}));
     value.name = nameValue;
 
@@ -121,7 +124,7 @@ export const updateProduct = async (req, res) => {
     }
     if ("scentId" in value) delete value.scentId;
 
-    const updated = await updateData(productModel, { _id: isValidObjectId(value.productId) }, value, {});
+    const updated = await updateData(productModel, { _id: productId }, value, {});
     return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.updateDataSuccess("Product"), updated, {}));
   } catch (error) {
     console.log(error);
@@ -135,10 +138,13 @@ export const deleteProduct = async (req, res) => {
     const { error, value } = deleteProductSchema.validate(req.params);
     if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
 
-    const existing = await getFirstMatch(productModel, { _id: isValidObjectId(value.id), isDeleted: false }, {}, {});
+    const productId = isValidObjectId(value.id);
+    if (!productId) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Product"), {}, {}));
+
+    const existing = await getFirstMatch(productModel, { _id: productId, isDeleted: false }, {}, {});
     if (!existing) return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("Product"), {}, {}));
 
-    await updateData(productModel, { _id: isValidObjectId(value.id) }, { isDeleted: true }, {});
+    await updateData(productModel, { _id: productId }, { isDeleted: true }, {});
     return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.deleteDataSuccess("Product"), {}, {}));
   } catch (error) {
     console.log(error);
@@ -265,7 +271,10 @@ export const getProductById = async (req, res) => {
     const { error, value } = getProductByIdSchema.validate(req.params);
     if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
 
-    const product = await findOneAndPopulate(productModel, { _id: isValidObjectId(value.id), isDeleted: false }, {}, {}, productPopulate);
+    const productId = isValidObjectId(value.id);
+    if (!productId) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Product"), {}, {}));
+
+    const product = await findOneAndPopulate(productModel, { _id: productId, isDeleted: false }, {}, {}, productPopulate);
     if (!product) return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("Product"), {}, {}));
 
     const ratingSummary = await getRatingSummary(product._id);
