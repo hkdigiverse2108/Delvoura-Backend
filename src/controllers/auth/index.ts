@@ -4,20 +4,12 @@ import {apiResponse,generateHash,generateToken,getOtpExpireTime,getUniqueOtp,HTT
 import {createData,email_verification_mail,getFirstMatch,password_reset_mail,reqInfo,responseMessage,updateData,} from "../../helper";
 import { changePasswordSchema, forgotPasswordSchema, loginSchema, resetPasswordSchema, signupSchema, verifyOtpSchema } from "../../validation";
 
-const toSafeUser = (user: any) => {
-  const userObject = user?.toObject ? user.toObject() : user;
-  const { password, otp, otpExpireTime, __v, ...safeUser } = userObject || {};
-  return safeUser;
-};
-
 //sigup
 export const signup = async (req, res) => {
   reqInfo(req);
   try {
     const { error, value } = signupSchema.validate(req.body || {});
-    if (error) {
-      return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
-    }
+    if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
 
     const { firstName, lastName, email, password, phoneNo, countryCode } = value ;
     const emailValue = email;
@@ -224,3 +216,9 @@ export const logout = async (req, res) => {
   }
 };
 
+
+const toSafeUser = (user: any) => {
+  const userObject = user?.toObject ? user.toObject() : user;
+  const { password, otp, otpExpireTime, __v, ...safeUser } = userObject || {};
+  return safeUser;
+};

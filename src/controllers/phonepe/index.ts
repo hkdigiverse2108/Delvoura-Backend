@@ -3,11 +3,6 @@ import { apiResponse, HTTP_STATUS } from "../../common";
 import { getPhonePeAccessToken, getPhonePeRedirectUrls, getPhonePeUrl, normalizePhonePeAmount, reqInfo, resolvePhonePeAmountUnit, responseMessage } from "../../helper";
 import { createPhonePePaymentSchema, phonePeOrderStatusSchema, phonePeRefundSchema, phonePeRefundStatusSchema } from "../../validation";
 
-const generateMerchantOrderId = () => {
-  const rand = Math.floor(100000 + Math.random() * 900000);
-  return `order_${Date.now()}_${rand}`;
-};
-
 export const create_phonepe_payment = async (req, res) => {
   reqInfo(req);
   try {
@@ -153,4 +148,9 @@ export const phonepe_callback = async (req, res) => {
 export const phonepe_redirect = async (req, res) => {
   reqInfo(req);
   return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.customMessage("Redirect received"), { query: req.query }, {}));
+};
+
+const generateMerchantOrderId = () => {
+  const rand = Math.floor(100000 + Math.random() * 900000);
+  return `order_${Date.now()}_${rand}`;
 };
