@@ -12,6 +12,13 @@ import { instagramRouter } from "./instagram";
 import { productRouter } from "./product";
 import { ratingRouter } from "./rating";
 import { phonepeRouter } from "./phonepe";
+import { returnExchangeRouter } from "./returnexchange";
+import { privacyPolicyRouter } from "./privacypolicy";
+import { termsConditionsRouter } from "./termsconditions";
+import { refundPolicyRouter } from "./refundpolicy";
+import { termsServiceRouter } from "./termsservice";
+import { contactUsRouter } from "./contactus";
+import { newsletterRouter } from "./newsletter";
 
 const router = Router();
 
@@ -28,5 +35,12 @@ router.use("/instagram", instagramRouter);
 router.use("/product", productRouter);
 router.use("/rating", ratingRouter);
 router.use("/phonepe", phonepeRouter);
+router.use("/return-exchange", returnExchangeRouter);
+router.use("/privacy-policy", privacyPolicyRouter);
+router.use("/terms-conditions", termsConditionsRouter);
+router.use("/refund-policy", refundPolicyRouter);
+router.use("/terms-of-service", termsServiceRouter);
+router.use("/contact-us", contactUsRouter);
+router.use("/newsletter", newsletterRouter);
 
 export { router };
