@@ -12,7 +12,7 @@ export const createProductSchema = Joi.object({
   gender: Joi.string().valid(...Object.values(PRODUCT_GENDERS)).optional(),
   collectionId: Joi.alternatives().try(Joi.string(), Joi.array().items(Joi.string())).optional(),
   collectionIds: Joi.alternatives().try(Joi.string(), Joi.array().items(Joi.string())).optional(),
-  variants: Joi.array().items(Joi.string()).optional(),
+  variants: Joi.array().items(Joi.object({size: Joi.string().required(),price: Joi.number().optional(),})).optional(),
   ingredients: Joi.array().items(Joi.string()).optional(),
   description: Joi.string().optional(),
   scentId: Joi.alternatives().try(Joi.string(), Joi.array().items(Joi.string())).optional(),

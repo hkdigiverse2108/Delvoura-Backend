@@ -17,6 +17,8 @@ export const fileStorage = multer.diskStorage({
         folderName = "products";
       } else if (req.baseUrl.includes("blog")) {
         folderName = "blogs";
+      } else if (req.baseUrl.includes("collection")) {
+        folderName = "collections";
       }
 
       const baseDir = "public/images";
