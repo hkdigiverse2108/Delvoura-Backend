@@ -10,7 +10,7 @@ export const create_phonepe_payment = async (req, res) => {
   try {
     const { error, value } = createPhonePePaymentSchema.validate(req.body || {});
     if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
-    
+
 
     const { amount, amountUnit, expireAfter, message, metaInfo, redirectUrl, callbackUrl, orderId } = value;
     const merchantOrderId = value.merchantOrderId || generateMerchantOrderId();
@@ -85,7 +85,7 @@ export const create_phonepe_payment = async (req, res) => {
       await updateData(orderModel, { _id: resolvedOrderId }, { phonePeId: merchantOrderId }, {});
     }
 
-    return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK,responseMessage.customMessage("Payment initiated"),{ merchantOrderId, phonepe: response.data },{}));
+    return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.customMessage("Payment initiated"), { merchantOrderId, phonepe: response.data }, {}));
   } catch (error: any) {
     const errorPayload = error?.response?.data || error;
     return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.internalServerError, {}, errorPayload));
@@ -97,7 +97,7 @@ export const phonepe_order_status = async (req, res) => {
   try {
     const { error, value } = phonePeOrderStatusSchema.validate(req.params || {});
     if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
-    
+
 
     const token = await getPhonePeAccessToken();
     const response = await axios.get(getPhonePeUrl(`/checkout/v2/order/${value.merchantOrderId}/status`), {
@@ -179,7 +179,34 @@ export const phonepe_refund_status = async (req, res) => {
 
 export const phonepe_callback = async (req, res) => {
   reqInfo(req);
-  return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.customMessage("Callback received"), { body: req.body, query: req.query }, {}));
+  try {
+    const body = req.body || {};
+    const query = req.query || {};
+
+    const merchantOrderId =
+      body?.merchantOrderId ||
+      body?.data?.merchantOrderId ||
+      body?.orderId ||
+      body?.data?.orderId ||
+      query?.merchantOrderId ||
+      query?.orderId;
+
+    const statusValue =
+      body?.state ||
+      body?.status ||
+      body?.data?.state ||
+      body?.data?.status ||
+      query?.state ||
+      query?.status;
+
+    if (merchantOrderId && statusValue) {
+      await updateData(orderModel, { phonePeId: String(merchantOrderId), isDeleted: false }, { paymentStatus: String(statusValue) }, {});
+    }
+
+    return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.customMessage("Callback received"), { body, query }, {}));
+  } catch (error: any) {
+    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.internalServerError, {}, error));
+  }
 };
 
 export const phonepe_redirect = async (req, res) => {
