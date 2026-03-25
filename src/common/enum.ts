@@ -4,7 +4,7 @@ export const USER_ROLES = {
 } as const;
 
 export const PRODUCT_GENDERS = {
-  WOMEN: "Women",
-  MEN: "Men",
-  UNISEX: "Unisex",
+  WOMEN: "women",
+  MEN: "men",
+  UNISEX: "unisex",
 } as const;
