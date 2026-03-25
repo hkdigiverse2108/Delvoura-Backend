@@ -1,4 +1,4 @@
-import { Router } from "express";
+﻿import { Router } from "express";
 import { authRouter } from "./auth";
 import { uploadRouter } from "./upload";
 import { userRouter } from "./user";
@@ -19,6 +19,7 @@ import { refundPolicyRouter } from "./refundpolicy";
 import { termsServiceRouter } from "./termsservice";
 import { contactUsRouter } from "./contactus";
 import { newsletterRouter } from "./newsletter";
+import { blogRouter } from "./blog";
 
 const router = Router();
 
@@ -42,5 +43,6 @@ router.use("/refund-policy", refundPolicyRouter);
 router.use("/terms-of-service", termsServiceRouter);
 router.use("/contact-us", contactUsRouter);
 router.use("/newsletter", newsletterRouter);
+router.use("/blog", blogRouter);
 
 export { router };

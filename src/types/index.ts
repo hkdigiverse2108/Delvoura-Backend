@@ -1,4 +1,5 @@
 ﻿export type { Banner } from "./banner";
+export type { Blog } from "./blog";
 export type { Collection } from "./collection";
 export type { ContactUs } from "./contactus";
 export type { Instagram } from "./instagram";
