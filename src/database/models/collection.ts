@@ -1,11 +1,5 @@
 import mongoose from "mongoose";
-
-export type Collection = {
-  name: string;
-  image?: string;
-  isActive?: boolean;
-  isDeleted?: boolean;
-};
+import type { Collection } from "../../types";
 
 const collectionSchema = new mongoose.Schema<Collection>(
   {

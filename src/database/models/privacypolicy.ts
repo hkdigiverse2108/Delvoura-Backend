@@ -1,11 +1,5 @@
 import mongoose from "mongoose";
-
-export type PrivacyPolicy = {
-  title: string;
-  content: string;
-  isActive?: boolean;
-  isDeleted?: boolean;
-};
+import type { PrivacyPolicy } from "../../types";
 
 const privacyPolicySchema = new mongoose.Schema<PrivacyPolicy>(
   {

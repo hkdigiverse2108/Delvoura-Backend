@@ -1,11 +1,5 @@
 import mongoose from "mongoose";
-
-export type ReturnExchange = {
-  question: string;
-  answer: string;
-  isActive?: boolean;
-  isDeleted?: boolean;
-};
+import type { ReturnExchange } from "../../types";
 
 const returnExchangeSchema = new mongoose.Schema<ReturnExchange>(
   {

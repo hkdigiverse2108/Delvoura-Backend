@@ -1,10 +1,5 @@
 import mongoose from "mongoose";
-
-export type Topbar = {
-  topbarItems: string[];
-  isActive?: boolean;
-  isDeleted?: boolean;
-};
+import type { Topbar } from "../../types";
 
 const topbarSchema = new mongoose.Schema<Topbar>(
   {

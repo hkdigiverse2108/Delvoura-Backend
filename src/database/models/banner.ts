@@ -1,10 +1,5 @@
 import mongoose from "mongoose";
-
-export type Banner = {
-  bannerImages: string[];
-  isActive?: boolean;
-  isDeleted?: boolean;
-};
+import type { Banner } from "../../types";
 
 const bannerSchema = new mongoose.Schema<Banner>(
   {

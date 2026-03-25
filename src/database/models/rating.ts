@@ -1,14 +1,5 @@
 import mongoose from "mongoose";
-
-export type Rating = {
-  productId: mongoose.Types.ObjectId;
-  firstName: string;
-  lastName: string;
-  email: string;
-  description?: string;
-  starRating: number;
-  isDeleted?: boolean;
-};
+import type { Rating } from "../../types";
 
 const ratingSchema = new mongoose.Schema<Rating>(
   {

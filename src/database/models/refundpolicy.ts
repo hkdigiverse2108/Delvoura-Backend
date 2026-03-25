@@ -1,11 +1,5 @@
 import mongoose from "mongoose";
-
-export type RefundPolicy = {
-  title: string;
-  content: string;
-  isActive?: boolean;
-  isDeleted?: boolean;
-};
+import type { RefundPolicy } from "../../types";
 
 const refundPolicySchema = new mongoose.Schema<RefundPolicy>(
   {

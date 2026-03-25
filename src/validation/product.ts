@@ -70,6 +70,7 @@ export const getProductsSchema = Joi.object({
   search: Joi.string().optional(),
   ActiveFilter: Joi.boolean().optional(),
   status: Joi.string().valid("active", "inactive").lowercase().optional(),
+  sortByFilter: Joi.string().valid("nameASC", "nameDESC", "newest", "oldest", "priceASC", "priceDESC").optional(),
   collectionFilter: Joi.alternatives().try(Joi.string(), Joi.array().items(Joi.string())).optional(),
   seasonFilter: Joi.alternatives().try(Joi.string(), Joi.array().items(Joi.string())).optional(),
   scentFilter: Joi.alternatives().try(Joi.string(), Joi.array().items(Joi.string())).optional(),

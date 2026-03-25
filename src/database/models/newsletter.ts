@@ -1,10 +1,5 @@
 import mongoose from "mongoose";
-
-export type Newsletter = {
-  email: string;
-  isActive?: boolean;
-  isDeleted?: boolean;
-};
+import type { Newsletter } from "../../types";
 
 const newsletterSchema = new mongoose.Schema<Newsletter>(
   {

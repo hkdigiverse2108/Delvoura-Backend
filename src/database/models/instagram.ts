@@ -1,13 +1,5 @@
 import mongoose from "mongoose";
-
-
-export type Instagram = {
-  imageUrl: string;
-  link: string;
-  videoUrl?: string | null;
-  isActive?: boolean;
-  isDeleted?: boolean;
-};
+import type { Instagram } from "../../types";
 
 const instagramSchema = new mongoose.Schema<Instagram>(
   {

@@ -1,10 +1,5 @@
 import mongoose from "mongoose";
-
-export type Season = {
-  name: string;
-  isActive?: boolean;
-  isDeleted?: boolean;
-};
+import type { Season } from "../../types";
 
 const seasonSchema = new mongoose.Schema<Season>(
   {

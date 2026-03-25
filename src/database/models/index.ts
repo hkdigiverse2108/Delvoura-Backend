@@ -15,3 +15,4 @@ export * from "./refundpolicy";
 export * from "./termsservice";
 export * from "./contactus";
 export * from "./newsletter";
+export type * from "../../types";

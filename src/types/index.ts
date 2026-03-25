@@ -1,0 +1,17 @@
+﻿export type { Banner } from "./banner";
+export type { Collection } from "./collection";
+export type { ContactUs } from "./contactus";
+export type { Instagram } from "./instagram";
+export type { Newsletter } from "./newsletter";
+export type { PrivacyPolicy } from "./privacypolicy";
+export type { Product } from "./product";
+export type { Rating } from "./rating";
+export type { RefundPolicy } from "./refundpolicy";
+export type { ReturnExchange } from "./returnexchange";
+export type { Scent } from "./scent";
+export type { Season } from "./season";
+export type { Settings } from "./settings";
+export type { TermsConditions } from "./termsconditions";
+export type { TermsService } from "./termsservice";
+export type { Topbar } from "./topbar";
+export type { User } from "./user";

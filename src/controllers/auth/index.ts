@@ -11,7 +11,7 @@ export const signup = async (req, res) => {
     const { error, value } = signupSchema.validate(req.body || {});
     if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
 
-    const { firstName, lastName, email, password, phoneNo, countryCode } = value ;
+    const { firstName, lastName, email, password, phoneNo } = value ;
     const emailValue = email;
     const firstNameValue = firstName;
     const lastNameValue = lastName;

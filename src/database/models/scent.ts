@@ -1,10 +1,5 @@
 import mongoose from "mongoose";
-
-export type Scent = {
-  name: string;
-  isActive?: boolean;
-  isDeleted?: boolean;
-};
+import type { Scent } from "../../types";
 
 const scentSchema = new mongoose.Schema<Scent>(
   {

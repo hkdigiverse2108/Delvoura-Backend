@@ -1,11 +1,5 @@
 import mongoose from "mongoose";
-
-export type TermsService = {
-  title: string;
-  content: string;
-  isActive?: boolean;
-  isDeleted?: boolean;
-};
+import type { TermsService } from "../../types";
 
 const termsServiceSchema = new mongoose.Schema<TermsService>(
   {

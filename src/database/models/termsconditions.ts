@@ -1,11 +1,5 @@
 import mongoose from "mongoose";
-
-export type TermsConditions = {
-  title: string;
-  content: string;
-  isActive?: boolean;
-  isDeleted?: boolean;
-};
+import type { TermsConditions } from "../../types";
 
 const termsConditionsSchema = new mongoose.Schema<TermsConditions>(
   {

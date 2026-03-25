@@ -158,7 +158,7 @@ export const getProducts = async (req, res) => {
     const { error, value } = getProductsSchema.validate(req.query);
     if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
 
-    const { page, limit, search, startDateFilter, endDateFilter, collectionFilter, seasonFilter, scentFilter, genderFilter, TrendingFilter, ActiveFilter, status } = value;
+    const { page, limit, search, startDateFilter, endDateFilter, collectionFilter, seasonFilter, scentFilter, genderFilter, TrendingFilter, ActiveFilter, status, sortByFilter } = value;
     let criteria: any = { isDeleted: false }, options: any = { lean: true };
 
     if (search) {
@@ -224,6 +224,14 @@ export const getProducts = async (req, res) => {
     if (dateRange) {
       criteria.createdAt = { $gte: dateRange.startDate, $lte: dateRange.endDate };
     }
+
+    if (sortByFilter === "nameASC") options.sort = { name: 1 };
+    else if (sortByFilter === "nameDESC") options.sort = { name: -1 };
+    else if (sortByFilter === "priceASC") options.sort = { mrp: 1 };
+    else if (sortByFilter === "priceDESC") options.sort = { mrp: -1 };
+    else if (sortByFilter === "newest") options.sort = { createdAt: -1 };
+    else if (sortByFilter === "oldest") options.sort = { createdAt: 1 };
+    else options.sort = { createdAt: -1 };
 
     const { page: pageValue, limit: limitValue, skip, hasLimit } = resolvePagination(page, limit);
     if (hasLimit) {
