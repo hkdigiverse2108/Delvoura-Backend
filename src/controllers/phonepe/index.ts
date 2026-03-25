@@ -16,13 +16,14 @@ export const create_phonepe_payment = async (req, res) => {
     const merchantOrderId = value.merchantOrderId || generateMerchantOrderId();
 
     let resolvedOrderId: string | false = false;
+    let orderData: any = null;
     if (orderId) {
       resolvedOrderId = isValidObjectId(orderId);
       if (!resolvedOrderId) {
         return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Order"), {}, {}));
       }
-      const orderExists = await getFirstMatch(orderModel, { _id: resolvedOrderId, isDeleted: false }, {}, {});
-      if (!orderExists) {
+      orderData = await getFirstMatch(orderModel, { _id: resolvedOrderId, isDeleted: false }, {}, {});
+      if (!orderData) {
         return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("Order"), {}, {}));
       }
     }
@@ -33,10 +34,18 @@ export const create_phonepe_payment = async (req, res) => {
 
     if (!finalRedirectUrl) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.customMessage("Redirect URL is required"), {}, {}));
 
+    let effectiveAmount = amount;
+    if ((!Number.isFinite(effectiveAmount) || effectiveAmount === undefined) && orderData) {
+      effectiveAmount = Number(orderData.total);
+    }
+    if (!Number.isFinite(effectiveAmount)) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.customMessage("Amount is required"), {}, {}));
+    }
+
     let normalizedAmount: number;
     try {
       const resolvedUnit = resolvePhonePeAmountUnit(amountUnit);
-      normalizedAmount = normalizePhonePeAmount(amount, resolvedUnit);
+      normalizedAmount = normalizePhonePeAmount(effectiveAmount, resolvedUnit);
     } catch (amountError: any) {
       return res
         .status(HTTP_STATUS.BAD_REQUEST)
@@ -97,6 +106,16 @@ export const phonepe_order_status = async (req, res) => {
         Authorization: `O-Bearer ${token}`,
       },
     });
+
+    const statusValue =
+      response.data?.state ||
+      response.data?.status ||
+      response.data?.data?.state ||
+      response.data?.data?.status;
+
+    if (statusValue) {
+      await updateData(orderModel, { phonePeId: value.merchantOrderId, isDeleted: false }, { paymentStatus: String(statusValue) }, {});
+    }
 
     return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.getDataSuccess("order status"), response.data, {}));
   } catch (error: any) {

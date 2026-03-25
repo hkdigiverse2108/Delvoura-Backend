@@ -19,7 +19,6 @@ export type Order = {
     productId: mongoose.Types.ObjectId;
     quantity: number;
     price: number;
-    size?: string;
   }[];
   discountCode?: string;
   subtotal: number;

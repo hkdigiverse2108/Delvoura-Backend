@@ -3,7 +3,11 @@ import Joi from "joi";
 export const createPhonePePaymentSchema = Joi.object({
   orderId: Joi.string().optional(),
   merchantOrderId: Joi.string().optional(),
-  amount: Joi.number().required(),
+  amount: Joi.when("orderId", {
+    is: Joi.string().trim().min(1),
+    then: Joi.number().optional(),
+    otherwise: Joi.number().required(),
+  }),
   amountUnit: Joi.string().trim().uppercase().valid("PAISE", "RUPEES").optional(),
   expireAfter: Joi.number().optional(),
   redirectUrl: Joi.string().uri().optional(),

@@ -22,7 +22,7 @@ const orderSchema = new mongoose.Schema<Order>(
         productId: { type: mongoose.Schema.Types.ObjectId, ref: "product", required: true },
         quantity: { type: Number, required: true },
         price: { type: Number, required: true },
-        size: { type: String },
+        
       },
     ],
     discountCode: { type: String },

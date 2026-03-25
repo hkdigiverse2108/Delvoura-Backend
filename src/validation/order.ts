@@ -17,7 +17,6 @@ const orderItemSchema = Joi.object({
   productId: Joi.string().required(),
   quantity: Joi.number().min(1).required(),
   price: Joi.number().required(),
-  size: Joi.string().optional(),
 });
 
 export const createOrderSchema = Joi.object({
@@ -36,7 +35,7 @@ export const createOrderSchema = Joi.object({
   phonePeId: Joi.string().allow(null, "").optional(),
   paymentStatus: Joi.string().optional(),
   orderStatus: Joi.string().optional(),
-}).or("email", "contactEmail");
+}).or("email", "contactEmail").options({ stripUnknown: true });
 
 export const getOrdersSchema = Joi.object({
   page: Joi.number().optional(),
