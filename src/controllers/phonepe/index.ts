@@ -1,6 +1,8 @@
 import axios from "axios";
-import { apiResponse, HTTP_STATUS } from "../../common";
-import { getPhonePeAccessToken, getPhonePeRedirectUrls, getPhonePeUrl, normalizePhonePeAmount, reqInfo, resolvePhonePeAmountUnit, responseMessage } from "../../helper";
+import { randomUUID } from "crypto";
+import { apiResponse, HTTP_STATUS, isValidObjectId } from "../../common";
+import { orderModel } from "../../database";
+import { getPhonePeAccessToken, getPhonePeRedirectUrls, getPhonePeUrl, getFirstMatch, normalizePhonePeAmount, reqInfo, resolvePhonePeAmountUnit, responseMessage, updateData } from "../../helper";
 import { createPhonePePaymentSchema, phonePeOrderStatusSchema, phonePeRefundSchema, phonePeRefundStatusSchema } from "../../validation";
 
 export const create_phonepe_payment = async (req, res) => {
@@ -10,8 +12,20 @@ export const create_phonepe_payment = async (req, res) => {
     if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
     
 
-    const { amount, amountUnit, expireAfter, message, metaInfo, redirectUrl, callbackUrl } = value;
+    const { amount, amountUnit, expireAfter, message, metaInfo, redirectUrl, callbackUrl, orderId } = value;
     const merchantOrderId = value.merchantOrderId || generateMerchantOrderId();
+
+    let resolvedOrderId: string | false = false;
+    if (orderId) {
+      resolvedOrderId = isValidObjectId(orderId);
+      if (!resolvedOrderId) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Order"), {}, {}));
+      }
+      const orderExists = await getFirstMatch(orderModel, { _id: resolvedOrderId, isDeleted: false }, {}, {});
+      if (!orderExists) {
+        return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("Order"), {}, {}));
+      }
+    }
 
     const { redirectUrl: fallbackRedirectUrl, callbackUrl: fallbackCallbackUrl } = getPhonePeRedirectUrls();
     const finalRedirectUrl = redirectUrl || fallbackRedirectUrl;
@@ -57,6 +71,10 @@ export const create_phonepe_payment = async (req, res) => {
         Authorization: `O-Bearer ${token}`,
       },
     });
+
+    if (resolvedOrderId) {
+      await updateData(orderModel, { _id: resolvedOrderId }, { phonePeId: merchantOrderId }, {});
+    }
 
     return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK,responseMessage.customMessage("Payment initiated"),{ merchantOrderId, phonepe: response.data },{}));
   } catch (error: any) {
@@ -151,6 +169,5 @@ export const phonepe_redirect = async (req, res) => {
 };
 
 const generateMerchantOrderId = () => {
-  const rand = Math.floor(100000 + Math.random() * 900000);
-  return `order_${Date.now()}_${rand}`;
+  return randomUUID();
 };

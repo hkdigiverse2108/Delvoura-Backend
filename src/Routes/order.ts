@@ -1,11 +1,11 @@
-﻿// import { Router } from "express";
-// import { adminJwt, userJwt } from "../helper";
-// import { orderController } from "../controllers";
+﻿import { Router } from "express";
+import { adminJwt, userJwt } from "../helper";
+import { orderController } from "../controllers";
 
-// const router = Router();
+const router = Router();
 
-// router.post("/add", userJwt, orderController.createOrder);
-// router.get("/", adminJwt, orderController.getOrders);
-// router.get("/:id", adminJwt, orderController.getOrderById);
+router.post("/add", userJwt, orderController.createOrder);
+router.get("/", adminJwt, orderController.getOrders);
+router.get("/:id", adminJwt, orderController.getOrderById);
 
-// export const orderRouter = router;
+export const orderRouter = router;

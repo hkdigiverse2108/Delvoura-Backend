@@ -20,7 +20,7 @@ import { termsServiceRouter } from "./termsservice";
 import { contactUsRouter } from "./contactus";
 import { newsletterRouter } from "./newsletter";
 import { blogRouter } from "./blog";
-// import { orderRouter } from "./order";
+import { orderRouter } from "./order";
 
 
 const router = Router();
@@ -46,6 +46,6 @@ router.use("/terms-of-service", termsServiceRouter);
 router.use("/contact-us", contactUsRouter);
 router.use("/newsletter", newsletterRouter);
 router.use("/blog", blogRouter);
-// router.use("/order", orderRouter);
+router.use("/order", orderRouter);
 
 export { router };

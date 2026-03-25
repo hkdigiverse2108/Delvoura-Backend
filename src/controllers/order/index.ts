@@ -1,4 +1,4 @@
-﻿import { apiResponse, getPaginationState, HTTP_STATUS, isValidObjectId, parseDateRange, resolvePagination } from "../../common";
+﻿import { apiResponse, getPaginationState, HTTP_STATUS, isValidObjectId, parseDateRange, resolvePagination, USER_ROLES } from "../../common";
 import { orderModel, productModel, userModel } from "../../database";
 import { countData, createData, getData, getDataWithSorting, getFirstMatch, reqInfo, responseMessage } from "../../helper";
 import { createOrderSchema, getOrderByIdSchema, getOrdersSchema } from "../../validation";
@@ -35,8 +35,29 @@ export const createOrder = async (req, res) => {
       if (!userExists) return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("User"), {}, {}));
 
       value.userId = userId;
-    } else if ("userId" in value) {
-      delete value.userId;
+    } else {
+      if ("userId" in value) delete value.userId;
+
+      const existingUser = await getFirstMatch(userModel, { email: emailValue, isDeleted: false }, {}, {});
+      if (existingUser) {
+        value.userId = existingUser._id;
+      } else {
+        const phoneRaw = value?.shippingAddress?.phone;
+        const phoneNumber = phoneRaw ? Number(String(phoneRaw).replace(/[^0-9]/g, "")) : undefined;
+        const contact = Number.isFinite(phoneNumber) ? { phoneNo: phoneNumber } : undefined;
+
+        const createdUser = await createData(userModel, {
+          email: emailValue,
+          firstName: value?.shippingAddress?.firstName,
+          lastName: value?.shippingAddress?.lastName,
+          roles: USER_ROLES.USER,
+          isActive: true,
+          isDeleted: false,
+          ...(contact ? { contact } : {}),
+        });
+
+        value.userId = createdUser?._id;
+      }
     }
 
     const rawProductIds = (value.items || []).map((item: any) => item.productId);
@@ -52,6 +73,14 @@ export const createOrder = async (req, res) => {
       }
     }
 
+    let subtotal = 0;
+    (value.items || []).forEach((item: any) => {
+      subtotal += Number(item.price) * Number(item.quantity);
+    });
+
+    value.subtotal = subtotal;
+    value.total = subtotal + Number(value.tax || 0) + Number(value.shipping || 0);
+
     const response = await createData(orderModel, value);
     return res.status(HTTP_STATUS.CREATED).json(new apiResponse(HTTP_STATUS.CREATED, responseMessage.addDataSuccess("Order"), response, {}));
   } catch (error) {
@@ -66,25 +95,16 @@ export const getOrders = async (req, res) => {
     const { error, value } = getOrdersSchema.validate(req.query) as { error: any; value: any };
     if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
 
-    const { page, limit, search, startDateFilter, endDateFilter, ActiveFilter, status, orderStatus, paymentStatus } = value;
+    const { page, limit, search, startDateFilter, endDateFilter, orderStatus, paymentStatus } = value;
     let criteria: any = { isDeleted: false }, options: any = { lean: true, sort: { createdAt: -1 } };
 
     if (search) {
       criteria.$or = [
         { email: { $regex: search, $options: "si" } },
-        { contactEmail: { $regex: search, $options: "si" } },
         { "shippingAddress.firstName": { $regex: search, $options: "si" } },
         { "shippingAddress.lastName": { $regex: search, $options: "si" } },
         { "shippingAddress.phone": { $regex: search, $options: "si" } },
       ];
-    }
-
-    if (typeof ActiveFilter !== "undefined") {
-      criteria.isActive = ActiveFilter;
-    } else if (status === "active") {
-      criteria.isActive = true;
-    } else if (status === "inactive") {
-      criteria.isActive = false;
     }
 
     if (orderStatus) criteria.orderStatus = orderStatus;
@@ -188,3 +208,4 @@ const attachUsersToOrders = async (orders: any[]) => {
     return { ...order, user: user || null };
   });
 };
+
