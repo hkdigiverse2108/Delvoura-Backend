@@ -1,4 +1,4 @@
-import { Router } from "express";
+﻿import { Router } from "express";
 import multer from "multer";
 import { uploadController } from "../controllers";
 import { fileFilter, fileStorage } from "../middleware";
@@ -10,7 +10,7 @@ const upload = multer({
   fileFilter,
 });
 
-router.post("/", upload.any(), uploadController.uploadFile);
+router.post("/", upload.array("files"), uploadController.uploadFile);
 router.get("/", uploadController.getAllImages);
 router.delete("/", uploadController.deleteUploadedFile);
 

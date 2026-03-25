@@ -213,3 +213,97 @@ export const password_reset_mail = async (user: any, otp: any) => {
         }
     });
 };
+
+const buildContactUsHtml = (payload: any) => {
+    const logoHtml = getLogoHtml();
+    const fullName = payload?.fullName || "-";
+    const email = payload?.email || "-";
+    const countryCode = payload?.countryCode || "";
+    const phone = payload?.phone || "-";
+    const message = payload?.message || "-";
+    const phoneValue = countryCode ? `${countryCode} ${phone}` : phone;
+
+    return `<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<style>
+body {
+  margin:0;
+  padding:0;
+  background:#ffffff;
+  color:#111111;
+  font-family: Arial, sans-serif;
+}
+.card {
+  max-width:600px;
+  margin:auto;
+  background:#f8f8f8;
+  border-radius:16px;
+  overflow:hidden;
+  border:1px solid #e0e0e0;
+}
+.header {
+  padding:20px;
+  text-align:center;
+  border-bottom:1px solid #e0e0e0;
+  background:#ffffff;
+}
+.content {
+  padding:24px;
+}
+.row {
+  margin:0 0 12px 0;
+  font-size:14px;
+}
+.label {
+  font-weight:700;
+  color:#111111;
+}
+.message-box {
+  background:#ffffff;
+  border:1px solid #e0e0e0;
+  padding:16px;
+  border-radius:10px;
+  white-space:pre-wrap;
+}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="header">
+    ${logoHtml}
+  </div>
+  <div class="content">
+    <h2 style="margin:0 0 16px 0;">New Contact Us Message</h2>
+    <p class="row"><span class="label">Name:</span> ${fullName}</p>
+    <p class="row"><span class="label">Email:</span> ${email}</p>
+    <p class="row"><span class="label">Phone:</span> ${phoneValue}</p>
+    <div class="message-box">${message}</div>
+  </div>
+</div>
+</body>
+</html>`;
+};
+
+export const contact_us_mail = async (payload: any) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const mailOptions = {
+                from: mailUser,
+                to: mailUser,
+                replyTo: payload?.email,
+                subject: "Delvoura | New Contact Us Message",
+                html: buildContactUsHtml(payload),
+            };
+
+            await transPorter.sendMail(mailOptions, (err) => {
+                if (err) reject(err);
+                else resolve(`Email sent to ${mailUser}`);
+            });
+        } catch (error) {
+            reject(error);
+        }
+    });
+};

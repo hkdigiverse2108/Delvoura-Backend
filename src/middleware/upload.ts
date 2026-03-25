@@ -1,4 +1,4 @@
-import multer from "multer";
+﻿import multer from "multer";
 import path from "path";
 import fs from "fs";
 
@@ -11,26 +11,15 @@ export const fileStorage = multer.diskStorage({
         return cb(new Error("Only image files are allowed"), "");
       }
 
-      let folderName = "others";
+      const baseDir = path.join(process.cwd(), "public/images");
 
-      if (req.baseUrl.includes("product")) {
-        folderName = "products";
-      } else if (req.baseUrl.includes("blog")) {
-        folderName = "blogs";
-      } else if (req.baseUrl.includes("collection")) {
-        folderName = "collections";
+      if (!fs.existsSync(baseDir)) {
+        fs.mkdirSync(baseDir, { recursive: true });
       }
 
-      const baseDir = "public/images";
-      const dir = path.join(process.cwd(), baseDir, folderName);
-
-      if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, { recursive: true });
-      }
-
-      cb(null, path.join(baseDir, folderName));
+      cb(null, baseDir);
     } catch (error) {
-      cb(error, "");
+      cb(error as Error, "");
     }
   },
 
@@ -39,7 +28,7 @@ export const fileStorage = multer.diskStorage({
       const sanitizedOriginalName = file.originalname.replace(/\s+/g, "-");
       cb(null, `${Date.now()}_${sanitizedOriginalName}`);
     } catch (error) {
-      cb(error, "");
+      cb(error as Error, "");
     }
   },
 });

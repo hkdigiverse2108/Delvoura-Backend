@@ -8,6 +8,7 @@ export * from "./blog";
 export * from "./topbar";
 export * from "./instagram";
 export * from "./product";
+export * from "./order";
 export * from "./rating";
 export * from "./returnexchange";
 export * from "./privacypolicy";

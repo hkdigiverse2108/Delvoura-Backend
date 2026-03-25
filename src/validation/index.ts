@@ -8,6 +8,7 @@ export * from "./scent";
 export * from "./settings";
 export * from "./banner";
 export * from "./blog";
+export * from "./order";
 export * from "./topbar";
 export * from "./instagram";
 export * from "./product";

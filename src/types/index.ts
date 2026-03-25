@@ -4,6 +4,7 @@ export type { Collection } from "./collection";
 export type { ContactUs } from "./contactus";
 export type { Instagram } from "./instagram";
 export type { Newsletter } from "./newsletter";
+export type { Order } from "./order";
 export type { PrivacyPolicy } from "./privacypolicy";
 export type { Product } from "./product";
 export type { Rating } from "./rating";

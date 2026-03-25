@@ -1,6 +1,6 @@
 import { apiResponse, getPaginationState, HTTP_STATUS, isValidObjectId, parseDateRange, resolvePagination } from "../../common";
 import { contactUsModel } from "../../database";
-import { countData, createData, getDataWithSorting, getFirstMatch, reqInfo, responseMessage, updateData } from "../../helper";
+import { contact_us_mail, countData, createData, getDataWithSorting, getFirstMatch, reqInfo, responseMessage, updateData } from "../../helper";
 import { createContactUsSchema, deleteContactUsSchema, getContactUsSchema, updateContactUsSchema } from "../../validation";
 
 export const createContactUs = async (req, res) => {
@@ -10,6 +10,13 @@ export const createContactUs = async (req, res) => {
     if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
 
     const response = await createData(contactUsModel, value);
+
+    try {
+      await contact_us_mail(value);
+    } catch (mailError) {
+      console.log(mailError);
+      return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.errorMail, {}, mailError));
+    }
 
     return res.status(HTTP_STATUS.CREATED).json(new apiResponse(HTTP_STATUS.CREATED, responseMessage.addDataSuccess("Contact us"), response, {}));
   } catch (error) {
