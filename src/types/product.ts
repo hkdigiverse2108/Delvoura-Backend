@@ -1,4 +1,4 @@
-﻿import type mongoose from "mongoose";
+import type mongoose from "mongoose";
 
 export type Product = {
   name: string;
@@ -22,6 +22,7 @@ export type Product = {
   metaDescription?: string;
   metaKeywords?: string[];
   slug?: string;
+  isFragrances?: boolean;
   isTrending?: boolean;
   brandManufacturerInfo?: string;
   isActive?: boolean;
