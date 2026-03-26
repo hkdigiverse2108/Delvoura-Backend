@@ -22,7 +22,7 @@ export type Product = {
   metaDescription?: string;
   metaKeywords?: string[];
   slug?: string;
-  isFragrances?: boolean;
+  isFeatured?: boolean;
   isTrending?: boolean;
   brandManufacturerInfo?: string;
   isActive?: boolean;

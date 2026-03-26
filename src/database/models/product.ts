@@ -28,7 +28,7 @@ const productSchema = new mongoose.Schema<Product>(
     metaKeywords: [{ type: String }],
     slug: { type: String },
     brandManufacturerInfo: { type: String },
-    isFragrances: { type: Boolean, default: false },
+    isFeatured: { type: Boolean, default: false },
     isTrending: { type: Boolean, default: false },
     isActive: { type: Boolean, default: true },
     isDeleted: { type: Boolean, default: false },

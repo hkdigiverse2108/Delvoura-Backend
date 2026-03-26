@@ -158,7 +158,7 @@ export const getProducts = async (req, res) => {
     const { error, value } = getProductsSchema.validate(req.query);
     if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
 
-    const { page, limit, search, startDateFilter, endDateFilter, collectionFilter, seasonFilter, scentFilter, genderFilter, TrendingFilter, FragrancesFilter, ActiveFilter, status, sortByFilter } = value;
+    const { page, limit, search, startDateFilter, endDateFilter, collectionFilter, seasonFilter, scentFilter, genderFilter, TrendingFilter, FeaturedFilter, ActiveFilter, status, sortByFilter } = value;
     let criteria: any = { isDeleted: false }, options: any = { lean: true };
 
     if (search) {
@@ -224,9 +224,9 @@ export const getProducts = async (req, res) => {
       criteria.isTrending = trendingValue;
     }
 
-    const fragrancesValue = FragrancesFilter;
-    if (typeof fragrancesValue !== "undefined") {
-      criteria.isFragrances = fragrancesValue;
+    const featuredValue = FeaturedFilter;
+    if (typeof featuredValue !== "undefined") {
+      criteria.isFeatured = featuredValue;
     }
 
     const dateRange = parseDateRange(startDateFilter, endDateFilter);
