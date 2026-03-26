@@ -6,6 +6,21 @@ import { getPhonePeAccessToken, getPhonePeCreatePaymentUrl, getPhonePeRedirectUr
 import type { PhonePeClientConfigOverrides } from "../../helper";
 import { createPhonePePaymentSchema, phonePeOrderStatusSchema, phonePeRefundSchema, phonePeRefundStatusSchema } from "../../validation";
 
+const logPhonePeError = (label: string, error: any) => {
+  if (process.env.PHONEPE_DEBUG !== "true") return;
+  const status = error?.response?.status;
+  const data = error?.response?.data;
+  const url = error?.config?.url;
+  const method = error?.config?.method;
+  const message = error?.message;
+  console.log("[PhonePe]", label, { status, method, url, message, data });
+};
+
+const logPhonePeInfo = (label: string, data: any) => {
+  if (process.env.PHONEPE_DEBUG !== "true") return;
+  console.log("[PhonePe]", label, data);
+};
+
 export const create_phonepe_payment = async (req, res) => {
   reqInfo(req);
   try {
@@ -44,8 +59,9 @@ export const create_phonepe_payment = async (req, res) => {
     }
 
     let normalizedAmount: number;
+    let resolvedUnit: ReturnType<typeof resolvePhonePeAmountUnit> | undefined;
     try {
-      const resolvedUnit = resolvePhonePeAmountUnit(amountUnit);
+      resolvedUnit = resolvePhonePeAmountUnit(amountUnit);
       normalizedAmount = normalizePhonePeAmount(effectiveAmount, resolvedUnit);
     } catch (amountError: any) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.customMessage(amountError?.message || "Invalid amount"), {}, {}));
@@ -72,12 +88,23 @@ export const create_phonepe_payment = async (req, res) => {
       payload.metaInfo = metaInfo;
     }
 
+    logPhonePeInfo("Create payment payload", {
+      merchantOrderId,
+      amount: normalizedAmount,
+      amountUnit: resolvedUnit,
+      expireAfter: payload.expireAfter,
+      redirectUrl: payload.paymentFlow?.merchantUrls?.redirectUrl,
+      callbackUrl: payload.paymentFlow?.merchantUrls?.callbackUrl,
+      paymentFlowType: payload.paymentFlow?.type,
+      metaInfo: payload.metaInfo,
+    });
+
     const phonePeConfig = await getPhonePeSettingsConfig();
     const token = await getPhonePeAccessToken(phonePeConfig);
     const response = await axios.post(getPhonePeCreatePaymentUrl(), payload, {
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
+        Authorization: `O-Bearer ${token}`,
       },
     });
 
@@ -87,6 +114,7 @@ export const create_phonepe_payment = async (req, res) => {
 
     return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.customMessage("Payment initiated"), { merchantOrderId, phonepe: response.data }, {}));
   } catch (error: any) {
+    logPhonePeError("Create payment failed", error);
     const errorPayload = error?.response?.data || error;
     return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.internalServerError, {}, errorPayload));
   }
@@ -120,6 +148,7 @@ export const phonepe_order_status = async (req, res) => {
 
     return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.getDataSuccess("order status"), response.data, {}));
   } catch (error: any) {
+    logPhonePeError("Order status failed", error);
     const errorPayload = error?.response?.data || error;
     return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.internalServerError, {}, errorPayload));
   }
@@ -147,12 +176,13 @@ export const phonepe_refund = async (req, res) => {
     const response = await axios.post(getPhonePeUrl("/payments/v2/refund"), { ...refundPayload, amount: normalizedAmount }, {
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
+        Authorization: `O-Bearer ${token}`,
       },
     });
 
     return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.customMessage("Refund initiated"), response.data, {}));
   } catch (error: any) {
+    logPhonePeError("Refund failed", error);
     const errorPayload = error?.response?.data || error;
     return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.internalServerError, {}, errorPayload));
   }
@@ -169,12 +199,13 @@ export const phonepe_refund_status = async (req, res) => {
     const response = await axios.get(getPhonePeUrl(`/payments/v2/refund/${value.merchantRefundId}/status`), {
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
+        Authorization: `O-Bearer ${token}`,
       },
     });
 
     return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.getDataSuccess("refund status"), response.data, {}));
   } catch (error: any) {
+    logPhonePeError("Refund status failed", error);
     const errorPayload = error?.response?.data || error;
     return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.internalServerError, {}, errorPayload));
   }

@@ -1,7 +1,6 @@
 ﻿export * from "./auth";
 export * from "./upload";
 export * from "./user";
-export * from "./category";
 export * from "./collection";
 export * from "./season";
 export * from "./scent";

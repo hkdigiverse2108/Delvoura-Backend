@@ -4,7 +4,10 @@ import { instagramController } from "../controllers";
 
 const router = Router();
 
-router.post("/add-edit", adminJwt, instagramController.add_edit_instagram);
-router.get("/", instagramController.get_instagram);
+router.post("/add", adminJwt, instagramController.createInstagram);
+router.put("/edit", adminJwt, instagramController.updateInstagram);
+router.delete("/:id", adminJwt, instagramController.deleteInstagram);
+router.get("/", instagramController.getInstagrams);
+router.get("/:id", instagramController.getInstagramById);
 
 export const instagramRouter = router;
