@@ -1,7 +1,7 @@
 ﻿import { apiResponse, getPaginationState, HTTP_STATUS, isValidObjectId, parseDateRange, resolvePagination, USER_ROLES } from "../../common";
 import { orderModel, productModel, userModel } from "../../database";
-import { countData, createData, getData, getDataWithSorting, getFirstMatch, reqInfo, responseMessage } from "../../helper";
-import { createOrderSchema, getOrderByIdSchema, getOrdersSchema } from "../../validation";
+import { countData, createData, getData, getDataWithSorting, getFirstMatch, reqInfo, responseMessage, updateData } from "../../helper";
+import { createOrderSchema, getOrderByIdSchema, getOrdersSchema, updateOrderShippingAddressSchema } from "../../validation";
 
 const userProjection = { password: 0, otp: 0, otpExpireTime: 0, __v: 0 };
 
@@ -25,6 +25,10 @@ export const createOrder = async (req, res) => {
     value.email = emailValue;
     if ("contactEmail" in value) delete value.contactEmail;
 
+    if (value.shippingAddress && !Array.isArray(value.shippingAddress)) {
+      value.shippingAddress = [value.shippingAddress];
+    }
+
     const authUser = req?.headers?.user as any;
     const incomingUserId = value.userId || authUser?._id;
     if (incomingUserId) {
@@ -42,14 +46,14 @@ export const createOrder = async (req, res) => {
       if (existingUser) {
         value.userId = existingUser._id;
       } else {
-        const phoneRaw = value?.shippingAddress?.phone;
+        const phoneRaw = value?.phone;
         const phoneNumber = phoneRaw ? Number(String(phoneRaw).replace(/[^0-9]/g, "")) : undefined;
         const contact = Number.isFinite(phoneNumber) ? { phoneNo: phoneNumber } : undefined;
 
         const createdUser = await createData(userModel, {
           email: emailValue,
-          firstName: value?.shippingAddress?.firstName,
-          lastName: value?.shippingAddress?.lastName,
+          firstName: value?.firstName,
+          lastName: value?.lastName,
           roles: USER_ROLES.USER,
           isActive: true,
           isDeleted: false,
@@ -101,9 +105,9 @@ export const getOrders = async (req, res) => {
     if (search) {
       criteria.$or = [
         { email: { $regex: search, $options: "si" } },
-        { "shippingAddress.firstName": { $regex: search, $options: "si" } },
-        { "shippingAddress.lastName": { $regex: search, $options: "si" } },
-        { "shippingAddress.phone": { $regex: search, $options: "si" } },
+        { firstName: { $regex: search, $options: "si" } },
+        { lastName: { $regex: search, $options: "si" } },
+        { phone: { $regex: search, $options: "si" } },
       ];
     }
 
@@ -152,6 +156,33 @@ export const getOrderById = async (req, res) => {
     const enrichedOrder = await attachUserToOrder(order);
 
     return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.getDataSuccess("Order"), enrichedOrder, {}));
+  } catch (error) {
+    console.log(error);
+    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.internalServerError, {}, error));
+  }
+};
+
+export const updateOrderShippingAddress = async (req, res) => {
+  reqInfo(req);
+  try {
+    const { error, value } = updateOrderShippingAddressSchema.validate(req.body || {});
+    if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
+
+    const orderId = isValidObjectId(value.orderId);
+    if (!orderId) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Order"), {}, {}));
+
+    const order = await getFirstMatch(orderModel, { _id: orderId, isDeleted: false }, {}, {});
+    if (!order) return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("Order"), {}, {}));
+
+    const authUser = req?.headers?.user as any;
+    if (authUser?._id && order?.userId && String(order.userId) !== String(authUser._id)) {
+      return res.status(HTTP_STATUS.UNAUTHORIZED).json(new apiResponse(HTTP_STATUS.UNAUTHORIZED, responseMessage.invalidToken, {}, {}));
+    }
+
+    const normalizedShipping = Array.isArray(value.shippingAddress) ? value.shippingAddress : [value.shippingAddress];
+    const updated = await updateData(orderModel, { _id: orderId }, { shippingAddress: normalizedShipping }, {});
+
+    return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.updateDataSuccess("Order"), updated, {}));
   } catch (error) {
     console.log(error);
     return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.internalServerError, {}, error));

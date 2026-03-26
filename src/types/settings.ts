@@ -1,4 +1,4 @@
-﻿export type Settings = {
+export type Settings = {
   logo?: string;
   isRazorpay?: boolean;
   razorpayApiKey?: string | null;
@@ -6,8 +6,7 @@
   isPhonePe?: boolean;
   phonePeApiKey?: string | null;
   phonePeApiSecret?: string | null;
-  phonePeVersion?: string | null;
-  link?: string | null;
+  phonePeVersion?: string | null;  link?: string | null;
   address?: string | null;
   phoneNumber?: string | null;
   email?: string | null;
@@ -19,3 +18,4 @@
   };
   isDeleted?: boolean;
 };
+

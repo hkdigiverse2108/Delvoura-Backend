@@ -1,8 +1,9 @@
 import axios from "axios";
 import { randomUUID } from "crypto";
 import { apiResponse, HTTP_STATUS, isValidObjectId } from "../../common";
-import { orderModel } from "../../database";
-import { getPhonePeAccessToken, getPhonePeRedirectUrls, getPhonePeUrl, getFirstMatch, normalizePhonePeAmount, reqInfo, resolvePhonePeAmountUnit, responseMessage, updateData } from "../../helper";
+import { orderModel, settingsModel } from "../../database";
+import { getPhonePeAccessToken, getPhonePeCreatePaymentUrl, getPhonePeRedirectUrls, getPhonePeUrl, getFirstMatch, normalizePhonePeAmount, reqInfo, resolvePhonePeAmountUnit, responseMessage, updateData } from "../../helper";
+import type { PhonePeClientConfigOverrides } from "../../helper";
 import { createPhonePePaymentSchema, phonePeOrderStatusSchema, phonePeRefundSchema, phonePeRefundStatusSchema } from "../../validation";
 
 export const create_phonepe_payment = async (req, res) => {
@@ -47,9 +48,7 @@ export const create_phonepe_payment = async (req, res) => {
       const resolvedUnit = resolvePhonePeAmountUnit(amountUnit);
       normalizedAmount = normalizePhonePeAmount(effectiveAmount, resolvedUnit);
     } catch (amountError: any) {
-      return res
-        .status(HTTP_STATUS.BAD_REQUEST)
-        .json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.customMessage(amountError?.message || "Invalid amount"), {}, {}));
+      return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.customMessage(amountError?.message || "Invalid amount"), {}, {}));
     }
 
     const payload: any = {
@@ -73,11 +72,12 @@ export const create_phonepe_payment = async (req, res) => {
       payload.metaInfo = metaInfo;
     }
 
-    const token = await getPhonePeAccessToken();
-    const response = await axios.post(getPhonePeUrl("/checkout/v2/pay"), payload, {
+    const phonePeConfig = await getPhonePeSettingsConfig();
+    const token = await getPhonePeAccessToken(phonePeConfig);
+    const response = await axios.post(getPhonePeCreatePaymentUrl(), payload, {
       headers: {
         "Content-Type": "application/json",
-        Authorization: `O-Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
       },
     });
 
@@ -99,7 +99,8 @@ export const phonepe_order_status = async (req, res) => {
     if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
 
 
-    const token = await getPhonePeAccessToken();
+    const phonePeConfig = await getPhonePeSettingsConfig();
+    const token = await getPhonePeAccessToken(phonePeConfig);
     const response = await axios.get(getPhonePeUrl(`/checkout/v2/order/${value.merchantOrderId}/status`), {
       headers: {
         "Content-Type": "application/json",
@@ -141,11 +142,12 @@ export const phonepe_refund = async (req, res) => {
         .json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.customMessage(amountError?.message || "Invalid amount"), {}, {}));
     }
 
-    const token = await getPhonePeAccessToken();
+    const phonePeConfig = await getPhonePeSettingsConfig();
+    const token = await getPhonePeAccessToken(phonePeConfig);
     const response = await axios.post(getPhonePeUrl("/payments/v2/refund"), { ...refundPayload, amount: normalizedAmount }, {
       headers: {
         "Content-Type": "application/json",
-        Authorization: `O-Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
       },
     });
 
@@ -162,11 +164,12 @@ export const phonepe_refund_status = async (req, res) => {
     const { error, value } = phonePeRefundStatusSchema.validate(req.params || {});
     if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
 
-    const token = await getPhonePeAccessToken();
+    const phonePeConfig = await getPhonePeSettingsConfig();
+    const token = await getPhonePeAccessToken(phonePeConfig);
     const response = await axios.get(getPhonePeUrl(`/payments/v2/refund/${value.merchantRefundId}/status`), {
       headers: {
         "Content-Type": "application/json",
-        Authorization: `O-Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
       },
     });
 
@@ -216,4 +219,30 @@ export const phonepe_redirect = async (req, res) => {
 
 const generateMerchantOrderId = () => {
   return randomUUID();
+};
+
+const maskValue = (value?: string | null) => {
+  if (!value) return value;
+  const trimmed = String(value).trim();
+  if (trimmed.length <= 6) return `${trimmed.slice(0, 2)}***`;
+  return `${trimmed.slice(0, 3)}***${trimmed.slice(-3)}`;
+};
+
+const getPhonePeSettingsConfig = async (): Promise<PhonePeClientConfigOverrides> => {
+  const settings = await settingsModel.findOne({ isDeleted: false }).lean();
+  if (process.env.PHONEPE_DEBUG === "true") {
+    console.log("[PhonePe]", "Settings config", {
+      hasSettings: Boolean(settings),
+      clientId: maskValue(settings?.phonePeApiKey),
+      clientVersion: settings?.phonePeVersion ?? null,
+      hasClientSecret: Boolean(settings?.phonePeApiSecret),
+    });
+  }
+  if (!settings) return {};
+
+  return {
+    clientId: settings.phonePeApiKey ?? undefined,
+    clientSecret: settings.phonePeApiSecret ?? undefined,
+    clientVersion: settings.phonePeVersion ?? undefined,
+  };
 };

@@ -1,4 +1,4 @@
-import { apiResponse, getPaginationState, HTTP_STATUS, isValidObjectId, parseDateRange, resolvePagination } from "../../common";
+import { apiResponse, getPaginationState, HTTP_STATUS, isValidObjectId, parseDateRange, PRODUCT_GENDERS, resolvePagination, USER_ROLES } from "../../common";
 import { collectionModel, productModel, ratingModel, seasonModel } from "../../database";
 import { aggregateData, countData, createData, findAllWithPopulateWithSorting, findOneAndPopulate, getData, getFirstMatch, reqInfo, responseMessage, updateData } from "../../helper";
 import { createProductSchema, deleteProductSchema, getProductByIdSchema, getProductsSchema, updateProductSchema } from "../../validation";
@@ -208,7 +208,14 @@ export const getProducts = async (req, res) => {
     }
     const genderValue = genderFilter;
     if (genderValue) {
-      criteria.gender = genderValue;
+      const authUser = req?.headers?.user as any;
+      const isAdmin = authUser?.roles === USER_ROLES.ADMIN;
+
+      if (!isAdmin && (genderValue === PRODUCT_GENDERS.MEN || genderValue === PRODUCT_GENDERS.WOMEN)) {
+        criteria.gender = { $in: [genderValue, PRODUCT_GENDERS.UNISEX] };
+      } else {
+        criteria.gender = genderValue;
+      }
     }
 
 

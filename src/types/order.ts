@@ -1,20 +1,20 @@
-﻿import type mongoose from "mongoose";
+import type mongoose from "mongoose";
 
 export type Order = {
   userId?: mongoose.Types.ObjectId | null;
+  firstName: string;
+  lastName: string;
   email: string;
+  phone: string;
   shippingAddress: {
     country: string;
-    firstName: string;
-    lastName: string;
-    company?: string;
     address1: string;
     address2?: string;
     city: string;
     state: string;
     pinCode: string;
-    phone: string;
-  };
+    default?: boolean;
+  }[];
   items: {
     productId: mongoose.Types.ObjectId;
     quantity: number;

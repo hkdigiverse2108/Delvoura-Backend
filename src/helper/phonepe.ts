@@ -3,9 +3,15 @@ import axios from "axios";
 type PhonePeTokenCache = {
   token: string;
   expiresAt: number;
+  configKey: string;
 };
 
 export type PhonePeAmountUnit = "PAISE" | "RUPEES";
+export type PhonePeClientConfigOverrides = Partial<{
+  clientId: string | null;
+  clientSecret: string | null;
+  clientVersion: string | number | null;
+}>;
 
 let phonePeTokenCache: PhonePeTokenCache | null = null;
 
@@ -16,6 +22,19 @@ const logPhonePeDebug = (...args: any[]) => {
   if (process.env.PHONEPE_DEBUG === "true") {
     console.log("[PhonePe]", ...args);
   }
+};
+
+const normalizeConfigValue = (value?: unknown): string | undefined => {
+  if (value === null || value === undefined) return undefined;
+  const trimmed = String(value).trim();
+  return trimmed ? trimmed : undefined;
+};
+
+const maskValue = (value?: string) => {
+  if (!value) return value;
+  const trimmed = value.trim();
+  if (trimmed.length <= 6) return `${trimmed.slice(0, 2)}***`;
+  return `${trimmed.slice(0, 3)}***${trimmed.slice(-3)}`;
 };
 
 const normalizePhonePeAmountUnit = (unit?: string | null): PhonePeAmountUnit | undefined => {
@@ -110,13 +129,55 @@ export const getPhonePeUrl = (path: string) => {
   return url;
 };
 
-export const getPhonePeClientConfig = () => {
-  const clientId = process.env.PHONEPE_CLIENT_ID;
-  const clientSecret = process.env.PHONEPE_CLIENT_SECRET;
-  const clientVersion = process.env.PHONEPE_CLIENT_VERSION;
+export const getPhonePeAuthUrl = () => {
+  const envAuthUrl = process.env.PHONEPE_AUTH_URL;
+  if (envAuthUrl) {
+    logPhonePeDebug("Auth URL (env)", envAuthUrl);
+    return envAuthUrl;
+  }
+
+  const baseUrl = getPhonePeBaseUrl();
+  const url = `${baseUrl}/v1/oauth/token`;
+  logPhonePeDebug("Auth URL (derived)", { baseUrl, url });
+  return url;
+};
+
+export const getPhonePeCreatePaymentUrl = () => {
+  const envCreateUrl = process.env.PHONEPE_CREATE_PAYMENT_URL;
+  if (envCreateUrl) {
+    logPhonePeDebug("Create payment URL (env)", envCreateUrl);
+    return envCreateUrl;
+  }
+
+  const baseUrl = getPhonePeBaseUrl();
+  const url = `${baseUrl}/checkout/v2/pay`;
+  logPhonePeDebug("Create payment URL (derived)", { baseUrl, url });
+  return url;
+};
+
+export const getPhonePeClientConfig = (overrides?: PhonePeClientConfigOverrides) => {
+  const overrideClientId = normalizeConfigValue(overrides?.clientId);
+  const overrideClientSecret = normalizeConfigValue(overrides?.clientSecret);
+  const overrideClientVersion = normalizeConfigValue(overrides?.clientVersion);
+
+  const envClientId = normalizeConfigValue(process.env.PHONEPE_CLIENT_ID);
+  const envClientSecret = normalizeConfigValue(process.env.PHONEPE_CLIENT_SECRET);
+  const envClientVersion = normalizeConfigValue(process.env.PHONEPE_CLIENT_VERSION);
+
+  const clientId = overrideClientId || envClientId;
+  const clientSecret = overrideClientSecret || envClientSecret;
+  const clientVersion = overrideClientVersion || envClientVersion;
+  const source = overrideClientId || overrideClientSecret || overrideClientVersion ? "settings" : "env";
+
+  logPhonePeDebug("Resolved client config", {
+    source,
+    clientId: maskValue(clientId),
+    clientVersion,
+    hasClientSecret: Boolean(clientSecret),
+  });
 
   if (!clientId || !clientSecret || !clientVersion) {
-    throw new Error("PhonePe client credentials are missing in env");
+    throw new Error("PhonePe client credentials are missing in env or settings");
   }
 
   return { clientId, clientSecret, clientVersion };
@@ -130,14 +191,15 @@ export const getPhonePeRedirectUrls = () => {
   return { redirectUrl, callbackUrl };
 };
 
-export const getPhonePeAccessToken = async () => {
+export const getPhonePeAccessToken = async (overrides?: PhonePeClientConfigOverrides) => {
+  const { clientId, clientSecret, clientVersion } = getPhonePeClientConfig(overrides);
+  const configKey = `${clientId}:${clientSecret}:${clientVersion}`;
   const now = Date.now();
-  if (phonePeTokenCache && phonePeTokenCache.expiresAt > now + 30_000) {
+  if (phonePeTokenCache && phonePeTokenCache.expiresAt > now + 30_000 && phonePeTokenCache.configKey === configKey) {
     return phonePeTokenCache.token;
   }
 
-  const { clientId, clientSecret, clientVersion } = getPhonePeClientConfig();
-  const url = getPhonePeUrl("/v1/oauth/token");
+  const url = getPhonePeAuthUrl();
 
   const body = new URLSearchParams({
     client_id: clientId,
@@ -168,7 +230,7 @@ export const getPhonePeAccessToken = async () => {
     3600;
 
   const expiresIn = Number(expiresInRaw) || 3600;
-  phonePeTokenCache = { token, expiresAt: now + expiresIn * 1000 };
+  phonePeTokenCache = { token, expiresAt: now + expiresIn * 1000, configKey };
 
   return token;
 };

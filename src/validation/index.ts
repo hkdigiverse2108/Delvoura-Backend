@@ -14,6 +14,7 @@ export * from "./instagram";
 export * from "./product";
 export * from "./rating";
 export * from "./phonepe";
+export * from "./razorpay";
 export * from "./returnexchange";
 export * from "./privacypolicy";
 export * from "./termsconditions";
