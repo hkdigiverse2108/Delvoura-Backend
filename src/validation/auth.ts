@@ -1,11 +1,11 @@
 import Joi from "joi";
 
 export const phoneSchema = Joi.alternatives().try(
-  Joi.string(),
+  Joi.string().allow(""),
   Joi.number(),
   Joi.object({
-    countryCode: Joi.string().optional(),
-    phoneNo: Joi.alternatives().try(Joi.string(), Joi.number()).optional(),
+    countryCode: Joi.string().allow("").optional(),
+    phoneNo: Joi.alternatives().try(Joi.string().allow("").empty(""), Joi.number()).optional(),
   })
 );
 
