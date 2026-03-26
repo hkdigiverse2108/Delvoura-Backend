@@ -6,7 +6,6 @@ export const phoneSchema = Joi.alternatives().try(
   Joi.object({
     countryCode: Joi.string().optional(),
     phoneNo: Joi.alternatives().try(Joi.string(), Joi.number()).optional(),
-    number: Joi.alternatives().try(Joi.string(), Joi.number()).optional(),
   })
 );
 
