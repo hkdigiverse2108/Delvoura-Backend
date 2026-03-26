@@ -102,6 +102,24 @@ export const getOrders = async (req, res) => {
     const { page, limit, search, startDateFilter, endDateFilter, orderStatus, paymentStatus } = value;
     let criteria: any = { isDeleted: false }, options: any = { lean: true, sort: { createdAt: -1 } };
 
+    const authUser = req?.headers?.user as any;
+    const isAdmin = authUser?.roles === USER_ROLES.ADMIN;
+    if (!isAdmin) {
+      const ownerOr: any[] = [];
+      if (authUser?._id) ownerOr.push({ userId: authUser._id });
+
+      const authEmail = authUser?.email ? String(authUser.email).toLowerCase() : "";
+      if (authEmail) {
+        ownerOr.push({ email: authEmail }, { contactEmail: authEmail });
+      }
+
+      if (!ownerOr.length) {
+        return res.status(HTTP_STATUS.UNAUTHORIZED).json(new apiResponse(HTTP_STATUS.UNAUTHORIZED, responseMessage.accessDenied, {}, {}));
+      }
+
+      criteria.$and = criteria.$and ? [...criteria.$and, { $or: ownerOr }] : [{ $or: ownerOr }];
+    }
+
     if (search) {
       criteria.$or = [
         { email: { $regex: search, $options: "si" } },
@@ -152,6 +170,18 @@ export const getOrderById = async (req, res) => {
 
     const order = await getFirstMatch(orderModel, { _id: orderId, isDeleted: false }, {}, {});
     if (!order) return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("Order"), {}, {}));
+
+    const authUser = req?.headers?.user as any;
+    const isAdmin = authUser?.roles === USER_ROLES.ADMIN;
+    if (!isAdmin) {
+      const authEmail = authUser?.email ? String(authUser.email).toLowerCase() : "";
+      const ownerMatch = authUser?._id && order?.userId && String(order.userId) === String(authUser._id);
+      const emailMatch = authEmail && authEmail === resolveOrderEmail(order);
+
+      if (!ownerMatch && !emailMatch) {
+        return res.status(HTTP_STATUS.UNAUTHORIZED).json(new apiResponse(HTTP_STATUS.UNAUTHORIZED, responseMessage.accessDenied, {}, {}));
+      }
+    }
 
     const enrichedOrder = await attachUserToOrder(order);
 
