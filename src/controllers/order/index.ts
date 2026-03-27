@@ -1,6 +1,6 @@
 ﻿import { apiResponse, getPaginationState, HTTP_STATUS, isValidObjectId, parseDateRange, resolvePagination, USER_ROLES } from "../../common";
 import { addressModel, orderModel, productModel, userModel } from "../../database";
-import { countData, createData, getData, getDataWithSorting, getFirstMatch, reqInfo, responseMessage, updateData } from "../../helper";
+import { countData, createData, getData, getDataWithSorting, getFirstMatch, reqInfo, responseMessage, updateData, updateMany } from "../../helper";
 import { createOrderSchema, getOrderByIdSchema, getOrdersSchema, updateOrderShippingAddressSchema } from "../../validation";
 
 const userProjection = { password: 0, otp: 0, otpExpireTime: 0, __v: 0 };
@@ -122,6 +122,41 @@ export const createOrder = async (req, res) => {
 
       if (products.length !== validProductIds.length) { return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("Product"), {}, {})); }
     }
+    if (!value.addressId && value.shippingAddress && value.userId) {
+      const normalizedShipping = normalizeShippingAddress(value.shippingAddress);
+      const shippingList = Array.isArray(normalizedShipping) ? normalizedShipping : [normalizedShipping];
+      const addressSource = shippingList.find((address) => address?.default === true) || shippingList[0];
+
+      if (addressSource) {
+        let isDefault = Boolean(addressSource.default);
+        if (!isDefault) {
+          const existingCount = await countData(addressModel, { userId: value.userId, isDeleted: false });
+          if (existingCount === 0) isDefault = true;
+        }
+
+        if (isDefault) {
+          await updateMany(addressModel, { userId: value.userId, isDeleted: false }, { isDefault: false }, {});
+        }
+
+        const createdAddress = await createData(addressModel, {
+          userId: value.userId,
+          country: addressSource.country,
+          address1: addressSource.address1,
+          address2: addressSource.address2 ?? "",
+          city: addressSource.city,
+          state: addressSource.state,
+          pinCode: addressSource.pinCode,
+          isDefault,
+          isActive: true,
+          isDeleted: false,
+        });
+
+        if (createdAddress?._id) {
+          value.addressId = createdAddress._id;
+        }
+      }
+    }
+
     let subtotal = 0;
 
     (value.items || []).forEach((item: any) => {subtotal += Number(item.price) * Number(item.quantity);});
