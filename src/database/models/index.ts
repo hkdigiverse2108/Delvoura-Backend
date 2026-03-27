@@ -1,4 +1,5 @@
-﻿export * from './user'
+export * from './user'
+export * from "./address";
 export * from "./collection";
 export * from "./season";
 export * from "./scent";

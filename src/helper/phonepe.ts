@@ -18,11 +18,7 @@ let phonePeTokenCache: PhonePeTokenCache | null = null;
 const DEFAULT_PHONEPE_BASE_URL = "https://api-preprod.phonepe.com/apis/pg-sandbox";
 const DEFAULT_PHONEPE_AMOUNT_UNIT: PhonePeAmountUnit = "RUPEES";
 
-const logPhonePeDebug = (...args: any[]) => {
-  if (process.env.PHONEPE_DEBUG === "true") {
-    console.log("[PhonePe]", ...args);
-  }
-};
+const logPhonePeDebug = (..._args: any[]) => {};
 
 const normalizeConfigValue = (value?: unknown): string | undefined => {
   if (value === null || value === undefined) return undefined;

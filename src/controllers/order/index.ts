@@ -1,5 +1,5 @@
 ﻿import { apiResponse, getPaginationState, HTTP_STATUS, isValidObjectId, parseDateRange, resolvePagination, USER_ROLES } from "../../common";
-import { orderModel, productModel, userModel } from "../../database";
+import { addressModel, orderModel, productModel, userModel } from "../../database";
 import { countData, createData, getData, getDataWithSorting, getFirstMatch, reqInfo, responseMessage, updateData } from "../../helper";
 import { createOrderSchema, getOrderByIdSchema, getOrdersSchema, updateOrderShippingAddressSchema } from "../../validation";
 
@@ -11,44 +11,91 @@ const resolveOrderEmail = (order: any) => {
   return raw ? String(raw).toLowerCase() : "";
 };
 
+const normalizeShippingAddress = (shippingAddress: any) => {
+  const normalized = Array.isArray(shippingAddress) ? shippingAddress : [shippingAddress];
+  if (!normalized.length) return normalized;
+
+  const hasDefault = normalized.some((address) => address?.default === true);
+  if (!hasDefault) return normalized;
+
+  let defaultSet = false;
+  return normalized.map((address) => {
+    if (address?.default === true && !defaultSet) {
+      defaultSet = true;
+      return { ...address, default: true };
+    }
+    return { ...address, default: false };
+  });
+};
+
 export const createOrder = async (req, res) => {
   reqInfo(req);
   try {
-    const { error, value } = createOrderSchema.validate(req.body || {}) as { error: any; value: any };
+    const { error, value } = createOrderSchema.validate(req.body || {});
     if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
 
     const rawEmail = value.email || value.contactEmail;
     const emailValue = rawEmail ? String(rawEmail).toLowerCase() : "";
-    if (!emailValue) {
-      return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidEmail, {}, {}));
-    }
+
+    if (!emailValue) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidEmail, {}, {}));
+
     value.email = emailValue;
     if ("contactEmail" in value) delete value.contactEmail;
 
-    if (value.shippingAddress && !Array.isArray(value.shippingAddress)) {
-      value.shippingAddress = [value.shippingAddress];
+    const authUser = req?.headers?.user as any;
+
+    if (!value.addressId && (!value.shippingAddress || value.shippingAddress.length === 0)) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, "Shipping address is required", {}, {}));
+
+    if (value.addressId) {
+      const addressId = isValidObjectId(value.addressId);
+      if (!addressId) { return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Address"), {}, {})); }
+
+      if (!authUser?._id) { return res.status(HTTP_STATUS.UNAUTHORIZED).json(new apiResponse(HTTP_STATUS.UNAUTHORIZED, responseMessage.invalidToken, {}, {})); }
+      const address = await getFirstMatch(addressModel, { _id: addressId, isDeleted: false }, {}, {});
+
+      if (!address) { return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("Address"), {}, {})); }
+
+      if (String(address.userId) !== String(authUser._id)) { return res.status(HTTP_STATUS.UNAUTHORIZED).json(new apiResponse(HTTP_STATUS.UNAUTHORIZED, responseMessage.accessDenied, {}, {})); }
+
+      value.addressId = addressId;
+      value.shippingAddress = [
+        {
+          country: address.country,
+          address1: address.address1,
+          address2: address.address2,
+          city: address.city,
+          state: address.state,
+          pinCode: address.pinCode,
+          default: Boolean(address.isDefault),
+        },
+      ];
     }
 
-    const authUser = req?.headers?.user as any;
+    if (value.shippingAddress) {
+      value.shippingAddress = normalizeShippingAddress(value.shippingAddress);
+    }
+
     const incomingUserId = value.userId || authUser?._id;
+
     if (incomingUserId) {
       const userId = isValidObjectId(incomingUserId);
-      if (!userId) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("User"), {}, {}));
+      if (!userId) { return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("User"), {}, {})); }
 
       const userExists = await getFirstMatch(userModel, { _id: userId, isDeleted: false }, {}, {});
-      if (!userExists) return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("User"), {}, {}));
+
+      if (!userExists) { return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("User"), {}, {})); }
 
       value.userId = userId;
     } else {
-      if ("userId" in value) delete value.userId;
-
       const existingUser = await getFirstMatch(userModel, { email: emailValue, isDeleted: false }, {}, {});
+
       if (existingUser) {
         value.userId = existingUser._id;
       } else {
         const phoneRaw = value?.phone;
-        const phoneNumber = phoneRaw ? Number(String(phoneRaw).replace(/[^0-9]/g, "")) : undefined;
-        const contact = Number.isFinite(phoneNumber) ? { phoneNo: phoneNumber } : undefined;
+        const phoneNumber = phoneRaw
+          ? Number(String(phoneRaw).replace(/[^0-9]/g, ""))
+          : undefined;
 
         const createdUser = await createData(userModel, {
           email: emailValue,
@@ -57,30 +104,27 @@ export const createOrder = async (req, res) => {
           roles: USER_ROLES.USER,
           isActive: true,
           isDeleted: false,
-          ...(contact ? { contact } : {}),
+          ...(phoneNumber ? { contact: { phoneNo: phoneNumber } } : {}),
         });
 
         value.userId = createdUser?._id;
       }
     }
-
     const rawProductIds = (value.items || []).map((item: any) => item.productId);
     const uniqueProductIds = Array.from(new Set(rawProductIds));
+
     if (uniqueProductIds.length > 0) {
       const validProductIds = uniqueProductIds.map((id) => isValidObjectId(String(id)));
-      if (validProductIds.some((id) => !id)) {
-        return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Product"), {}, {}));
-      }
-      const products = await getData(productModel, { _id: { $in: validProductIds }, isDeleted: false }, { _id: 1 }, {});
-      if (products.length !== validProductIds.length) {
-        return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("Product"), {}, {}));
-      }
-    }
 
+      if (validProductIds.some((id) => !id)) { return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Product"), {}, {})); }
+
+      const products = await getData(productModel, { _id: { $in: validProductIds }, isDeleted: false }, {}, {});
+
+      if (products.length !== validProductIds.length) { return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("Product"), {}, {})); }
+    }
     let subtotal = 0;
-    (value.items || []).forEach((item: any) => {
-      subtotal += Number(item.price) * Number(item.quantity);
-    });
+
+    (value.items || []).forEach((item: any) => {subtotal += Number(item.price) * Number(item.quantity);});
 
     value.subtotal = subtotal;
     value.total = subtotal + Number(value.tax || 0) + Number(value.shipping || 0);
@@ -109,14 +153,10 @@ export const getOrders = async (req, res) => {
       if (authUser?._id) ownerOr.push({ userId: authUser._id });
 
       const authEmail = authUser?.email ? String(authUser.email).toLowerCase() : "";
-      if (authEmail) {
-        ownerOr.push({ email: authEmail }, { contactEmail: authEmail });
-      }
+      if (authEmail) {ownerOr.push({ email: authEmail }, { contactEmail: authEmail });}
 
-      if (!ownerOr.length) {
-        return res.status(HTTP_STATUS.UNAUTHORIZED).json(new apiResponse(HTTP_STATUS.UNAUTHORIZED, responseMessage.accessDenied, {}, {}));
-      }
-
+      if (!ownerOr.length) {return res.status(HTTP_STATUS.UNAUTHORIZED).json(new apiResponse(HTTP_STATUS.UNAUTHORIZED, responseMessage.accessDenied, {}, {}));}
+      
       criteria.$and = criteria.$and ? [...criteria.$and, { $or: ownerOr }] : [{ $or: ownerOr }];
     }
 
@@ -133,12 +173,10 @@ export const getOrders = async (req, res) => {
     if (paymentStatus) criteria.paymentStatus = paymentStatus;
 
     const dateRange = parseDateRange(startDateFilter, endDateFilter);
-    if (startDateFilter && endDateFilter && !dateRange) {
-      return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.customMessage("Invalid date filter"), {}, {}));
-    }
-    if (dateRange) {
-      criteria.createdAt = { $gte: dateRange.startDate, $lte: dateRange.endDate };
-    }
+    if (startDateFilter && endDateFilter && !dateRange) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.customMessage("Invalid date filter"), {}, {}));
+    
+    if (dateRange) criteria.createdAt = { $gte: dateRange.startDate, $lte: dateRange.endDate };
+    
 
     const { page: pageValue, limit: limitValue, skip, hasLimit } = resolvePagination(page, limit);
     if (hasLimit) {
@@ -178,9 +216,7 @@ export const getOrderById = async (req, res) => {
       const ownerMatch = authUser?._id && order?.userId && String(order.userId) === String(authUser._id);
       const emailMatch = authEmail && authEmail === resolveOrderEmail(order);
 
-      if (!ownerMatch && !emailMatch) {
-        return res.status(HTTP_STATUS.UNAUTHORIZED).json(new apiResponse(HTTP_STATUS.UNAUTHORIZED, responseMessage.accessDenied, {}, {}));
-      }
+      if (!ownerMatch && !emailMatch) {return res.status(HTTP_STATUS.UNAUTHORIZED).json(new apiResponse(HTTP_STATUS.UNAUTHORIZED, responseMessage.accessDenied, {}, {}));}
     }
 
     const enrichedOrder = await attachUserToOrder(order);
@@ -205,11 +241,10 @@ export const updateOrderShippingAddress = async (req, res) => {
     if (!order) return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("Order"), {}, {}));
 
     const authUser = req?.headers?.user as any;
-    if (authUser?._id && order?.userId && String(order.userId) !== String(authUser._id)) {
-      return res.status(HTTP_STATUS.UNAUTHORIZED).json(new apiResponse(HTTP_STATUS.UNAUTHORIZED, responseMessage.invalidToken, {}, {}));
-    }
+    if (authUser?._id && order?.userId && String(order.userId) !== String(authUser._id)) return res.status(HTTP_STATUS.UNAUTHORIZED).json(new apiResponse(HTTP_STATUS.UNAUTHORIZED, responseMessage.invalidToken, {}, {}));
+    
 
-    const normalizedShipping = Array.isArray(value.shippingAddress) ? value.shippingAddress : [value.shippingAddress];
+    const normalizedShipping = normalizeShippingAddress(value.shippingAddress);
     const updated = await updateData(orderModel, { _id: orderId }, { shippingAddress: normalizedShipping }, {});
 
     return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.updateDataSuccess("Order"), updated, {}));
@@ -269,4 +304,3 @@ const attachUsersToOrders = async (orders: any[]) => {
     return { ...order, user: user || null };
   });
 };
-

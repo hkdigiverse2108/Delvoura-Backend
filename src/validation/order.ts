@@ -18,6 +18,7 @@ const orderItemSchema = Joi.object({
 
 export const createOrderSchema = Joi.object({
   userId: Joi.string().optional(),
+  addressId: Joi.string().optional(),
   firstName: Joi.string().required(),
   lastName: Joi.string().required(),
   email: Joi.string().email().optional(),
@@ -25,7 +26,7 @@ export const createOrderSchema = Joi.object({
   phone: Joi.string().required(),
   shippingAddress: Joi.alternatives()
     .try(Joi.array().items(shippingAddressSchema).min(1), shippingAddressSchema)
-    .required(),
+    .optional(),
   items: Joi.array().items(orderItemSchema).min(1).required(),
   discountCode: Joi.string().optional(),
   subtotal: Joi.number().required(),
@@ -37,7 +38,7 @@ export const createOrderSchema = Joi.object({
   phonePeId: Joi.string().allow(null, "").optional(),
   paymentStatus: Joi.string().optional(),
   orderStatus: Joi.string().optional(),
-}).or("email", "contactEmail").options({ stripUnknown: true });
+}).or("email", "contactEmail").or("shippingAddress", "addressId").options({ stripUnknown: true });
 
 export const getOrdersSchema = Joi.object({
   page: Joi.number().optional(),

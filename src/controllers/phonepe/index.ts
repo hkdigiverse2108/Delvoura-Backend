@@ -6,20 +6,9 @@ import { getPhonePeAccessToken, getPhonePeCreatePaymentUrl, getPhonePeRedirectUr
 import type { PhonePeClientConfigOverrides } from "../../helper";
 import { createPhonePePaymentSchema, phonePeOrderStatusSchema, phonePeRefundSchema, phonePeRefundStatusSchema } from "../../validation";
 
-const logPhonePeError = (label: string, error: any) => {
-  if (process.env.PHONEPE_DEBUG !== "true") return;
-  const status = error?.response?.status;
-  const data = error?.response?.data;
-  const url = error?.config?.url;
-  const method = error?.config?.method;
-  const message = error?.message;
-  console.log("[PhonePe]", label, { status, method, url, message, data });
-};
+const logPhonePeError = (_label: string, _error: any) => {};
 
-const logPhonePeInfo = (label: string, data: any) => {
-  if (process.env.PHONEPE_DEBUG !== "true") return;
-  console.log("[PhonePe]", label, data);
-};
+const logPhonePeInfo = (_label: string, _data: any) => {};
 
 export const create_phonepe_payment = async (req, res) => {
   reqInfo(req);
@@ -261,14 +250,6 @@ const maskValue = (value?: string | null) => {
 
 const getPhonePeSettingsConfig = async (): Promise<PhonePeClientConfigOverrides> => {
   const settings = await settingsModel.findOne({ isDeleted: false }).lean();
-  if (process.env.PHONEPE_DEBUG === "true") {
-    console.log("[PhonePe]", "Settings config", {
-      hasSettings: Boolean(settings),
-      clientId: maskValue(settings?.phonePeApiKey),
-      clientVersion: settings?.phonePeVersion ?? null,
-      hasClientSecret: Boolean(settings?.phonePeApiSecret),
-    });
-  }
   if (!settings) return {};
 
   return {

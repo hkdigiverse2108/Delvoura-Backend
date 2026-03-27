@@ -4,6 +4,7 @@ import type { Order } from "../../types";
 const orderSchema = new mongoose.Schema<Order>(
   {
     userId: { type: mongoose.Schema.Types.ObjectId, ref: "user" },
+    addressId: { type: mongoose.Schema.Types.ObjectId, ref: "address", default: null },
 
   
     firstName: { type: String, required: true },
@@ -14,7 +15,7 @@ const orderSchema = new mongoose.Schema<Order>(
       {
         country: { type: String, required: true },
         address1: { type: String, required: true },
-        address2: { type: String, isDefault: "" },
+        address2: { type: String, default: "" },
         city: { type: String, required: true },
         state: { type: String, required: true },
         pinCode: { type: String, required: true },
@@ -43,3 +44,4 @@ const orderSchema = new mongoose.Schema<Order>(
 );
 
 export const orderModel = mongoose.model<Order>("order", orderSchema, "order");
+

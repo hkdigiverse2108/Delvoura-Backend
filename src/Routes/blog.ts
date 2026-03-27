@@ -4,7 +4,7 @@ import { blogController } from "../controllers";
 
 const router = Router();
 
-router.post("/add", adminJwt, blogController.createBlog);
+router.post("/add", adminJwt,blogController.createBlog);
 router.put("/edit", adminJwt, blogController.updateBlog);
 router.delete("/:id", adminJwt, blogController.deleteBlog);
 router.get("/", blogController.getBlogs);
