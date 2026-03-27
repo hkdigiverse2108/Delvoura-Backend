@@ -3,19 +3,6 @@ import { addressModel } from "../../database";
 import { countData, createData, getDataWithSorting, getFirstMatch, reqInfo, responseMessage, updateData, updateMany } from "../../helper";
 import { createAddressSchema, deleteAddressSchema, getAddressByIdSchema, getAddressesSchema, updateAddressSchema } from "../../validation";
 
-const buildAddressPayload = (value: any) => {
-  const payload: any = {};
-  if (typeof value.country !== "undefined") payload.country = value.country;
-  if (typeof value.address1 !== "undefined") payload.address1 = value.address1;
-  if (typeof value.address2 !== "undefined") payload.address2 = value.address2;
-  if (typeof value.city !== "undefined") payload.city = value.city;
-  if (typeof value.state !== "undefined") payload.state = value.state;
-  if (typeof value.pinCode !== "undefined") payload.pinCode = value.pinCode;
-  if (typeof value.isDefault !== "undefined") payload.isDefault = value.isDefault;
-  if (typeof value.isActive !== "undefined") payload.isActive = value.isActive;
-  return payload;
-};
-
 export const createAddress = async (req, res) => {
   reqInfo(req);
   try {
@@ -128,7 +115,7 @@ export const getAddresses = async (req, res) => {
         { pinCode: { $regex: search, $options: "si" } },
       ];
     }
-    
+
     if (typeof ActiveFilter !== "undefined") {
       criteria.isActive = ActiveFilter;
     } else if (status === "active") {
@@ -177,11 +164,24 @@ export const getAddressById = async (req, res) => {
     const response = await getFirstMatch(addressModel, { _id: addressId, isDeleted: false }, {}, {});
     if (!response) return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("Address"), {}, {}));
     if (String(response.userId) !== String(authUser._id)) return res.status(HTTP_STATUS.UNAUTHORIZED).json(new apiResponse(HTTP_STATUS.UNAUTHORIZED, responseMessage.accessDenied, {}, {}));
-    
+
 
     return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.getDataSuccess("Address"), response, {}));
   } catch (error) {
     console.log(error);
     return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.internalServerError, {}, error));
   }
+};
+
+const buildAddressPayload = (value: any) => {
+  const payload: any = {};
+  if (typeof value.country !== "undefined") payload.country = value.country;
+  if (typeof value.address1 !== "undefined") payload.address1 = value.address1;
+  if (typeof value.address2 !== "undefined") payload.address2 = value.address2;
+  if (typeof value.city !== "undefined") payload.city = value.city;
+  if (typeof value.state !== "undefined") payload.state = value.state;
+  if (typeof value.pinCode !== "undefined") payload.pinCode = value.pinCode;
+  if (typeof value.isDefault !== "undefined") payload.isDefault = value.isDefault;
+  if (typeof value.isActive !== "undefined") payload.isActive = value.isActive;
+  return payload;
 };

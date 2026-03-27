@@ -309,10 +309,7 @@ const attachUsersToOrders = async (orders: any[]) => {
   if (!orders?.length) return [];
 
   const userIds = Array.from(new Set(orders.map((order) => order?.userId).filter(Boolean).map((id) => String(id))));
-  const emails = Array.from(new Set(orders
-    .filter((order) => !order?.userId)
-    .map((order) => resolveOrderEmail(order))
-    .filter(Boolean)));
+  const emails = Array.from(new Set(orders.filter((order) => !order?.userId).map((order) => resolveOrderEmail(order)).filter(Boolean)));
 
   const userById = new Map<string, any>();
   const userByEmail = new Map<string, any>();
