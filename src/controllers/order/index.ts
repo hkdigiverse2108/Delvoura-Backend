@@ -1,4 +1,4 @@
-﻿import { apiResponse, getPaginationState, HTTP_STATUS, isValidObjectId, parseDateRange, resolvePagination, USER_ROLES } from "../../common";
+import { apiResponse, getPaginationState, HTTP_STATUS, isValidObjectId, parseDateRange, resolvePagination, USER_ROLES } from "../../common";
 import { addressModel, orderModel, productModel, userModel } from "../../database";
 import { countData, createData, getData, getDataWithSorting, getFirstMatch, reqInfo, responseMessage, updateData, updateMany } from "../../helper";
 import { createOrderSchema, getOrderByIdSchema, getOrdersSchema, updateOrderShippingAddressSchema } from "../../validation";
@@ -162,7 +162,7 @@ export const createOrder = async (req, res) => {
     (value.items || []).forEach((item: any) => {subtotal += Number(item.price) * Number(item.quantity);});
 
     value.subtotal = subtotal;
-    value.total = subtotal + Number(value.tax || 0) + Number(value.shipping || 0);
+    value.total = subtotal;
 
     const response = await createData(orderModel, value);
     return res.status(HTTP_STATUS.CREATED).json(new apiResponse(HTTP_STATUS.CREATED, responseMessage.addDataSuccess("Order"), response, {}));
@@ -336,3 +336,4 @@ const attachUsersToOrders = async (orders: any[]) => {
     return { ...order, user: user || null };
   });
 };
+

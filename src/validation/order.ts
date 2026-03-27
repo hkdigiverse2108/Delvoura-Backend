@@ -1,4 +1,4 @@
-﻿import Joi from "joi";
+import Joi from "joi";
 
 const shippingAddressSchema = Joi.object({
   country: Joi.string().required(),
@@ -30,8 +30,6 @@ export const createOrderSchema = Joi.object({
   items: Joi.array().items(orderItemSchema).min(1).required(),
   discountCode: Joi.string().optional(),
   subtotal: Joi.number().required(),
-  shipping: Joi.number().optional(),
-  tax: Joi.number().optional(),
   total: Joi.number().required(),
   currency: Joi.string().optional(),
   razorpayId: Joi.string().allow(null, "").optional(),
@@ -62,3 +60,4 @@ export const updateOrderShippingAddressSchema = Joi.object({
     .try(Joi.array().items(shippingAddressSchema).min(1), shippingAddressSchema)
     .required(),
 });
+

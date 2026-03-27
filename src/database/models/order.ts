@@ -30,8 +30,6 @@ const orderSchema = new mongoose.Schema<Order>(
     ],
     discountCode: { type: String },
     subtotal: { type: Number, required: true },
-    shipping: { type: Number, default: 0 },
-    tax: { type: Number, default: 0 },
     total: { type: Number, required: true },
     currency: { type: String, default: "INR" },
     razorpayId: { type: String, default: null },
@@ -44,4 +42,3 @@ const orderSchema = new mongoose.Schema<Order>(
 );
 
 export const orderModel = mongoose.model<Order>("order", orderSchema, "order");
-

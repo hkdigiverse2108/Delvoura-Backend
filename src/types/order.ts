@@ -23,8 +23,6 @@ export type Order = {
   }[];
   discountCode?: string;
   subtotal: number;
-  shipping?: number;
-  tax?: number;
   total: number;
   currency?: string;
   razorpayId?: string | null;
