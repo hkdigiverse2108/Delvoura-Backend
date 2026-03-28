@@ -4,9 +4,7 @@ import { privacyPolicyController } from "../controllers";
 
 const router = Router();
 
-router.post("/add", adminJwt, privacyPolicyController.createPrivacyPolicy);
-router.put("/edit", adminJwt, privacyPolicyController.updatePrivacyPolicy);
-router.delete("/:id", adminJwt, privacyPolicyController.deletePrivacyPolicy);
-router.get("/", privacyPolicyController.getPrivacyPolicies);
+router.post("/add-edit", adminJwt, privacyPolicyController.add_edit_privacy_policy);
+router.get("/", privacyPolicyController.get_privacy_policy);
 
 export const privacyPolicyRouter = router;

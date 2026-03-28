@@ -4,9 +4,7 @@ import { termsServiceController } from "../controllers";
 
 const router = Router();
 
-router.post("/add", adminJwt, termsServiceController.createTermsService);
-router.put("/edit", adminJwt, termsServiceController.updateTermsService);
-router.delete("/:id", adminJwt, termsServiceController.deleteTermsService);
-router.get("/", termsServiceController.getTermsServices);
+router.post("/add-edit", adminJwt, termsServiceController.add_edit_terms_service);
+router.get("/", termsServiceController.get_terms_service);
 
 export const termsServiceRouter = router;

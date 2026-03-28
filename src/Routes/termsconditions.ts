@@ -4,9 +4,7 @@ import { termsConditionsController } from "../controllers";
 
 const router = Router();
 
-router.post("/add", adminJwt, termsConditionsController.createTermsConditions);
-router.put("/edit", adminJwt, termsConditionsController.updateTermsConditions);
-router.delete("/:id", adminJwt, termsConditionsController.deleteTermsConditions);
-router.get("/", termsConditionsController.getTermsConditions);
+router.post("/add-edit", adminJwt, termsConditionsController.add_edit_terms_conditions);
+router.get("/", termsConditionsController.get_terms_conditions);
 
 export const termsConditionsRouter = router;

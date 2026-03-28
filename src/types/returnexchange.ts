@@ -1,6 +1,4 @@
 ﻿export type ReturnExchange = {
-  question: string;
-  answer: string;
-  isActive?: boolean;
+  content: string;
   isDeleted?: boolean;
 };

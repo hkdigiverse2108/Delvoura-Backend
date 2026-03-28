@@ -3,9 +3,7 @@ import type { PrivacyPolicy } from "../../types";
 
 const privacyPolicySchema = new mongoose.Schema<PrivacyPolicy>(
   {
-    title: { type: String, required: true },
     content: { type: String, required: true },
-    isActive: { type: Boolean, default: true },
     isDeleted: { type: Boolean, default: false },
   },
   { timestamps: true }
