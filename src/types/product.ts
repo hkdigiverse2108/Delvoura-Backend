@@ -12,6 +12,7 @@ export type Product = {
   variants?: {
     size: string;
     price?: number;
+    mrp?: number;
   }[];
   ingredients?: string[];
   description?: string;
@@ -28,3 +29,5 @@ export type Product = {
   isActive?: boolean;
   isDeleted?: boolean;
 };
+
+

@@ -16,6 +16,7 @@ const productSchema = new mongoose.Schema<Product>(
       {
         size: { type: String, required: true },
         price: { type: Number },
+        mrp: { type: Number }
       },
     ],
     ingredients: [{ type: String }],
