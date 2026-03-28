@@ -3,7 +3,7 @@ import path from "path";
 import fs from "fs";
 
 export const fileStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
+  destination: (_req, file, cb) => {
     try {
       const isImage = file.mimetype.startsWith("image/");
 

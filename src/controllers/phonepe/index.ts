@@ -241,13 +241,6 @@ const generateMerchantOrderId = () => {
   return randomUUID();
 };
 
-const maskValue = (value?: string | null) => {
-  if (!value) return value;
-  const trimmed = String(value).trim();
-  if (trimmed.length <= 6) return `${trimmed.slice(0, 2)}***`;
-  return `${trimmed.slice(0, 3)}***${trimmed.slice(-3)}`;
-};
-
 const getPhonePeSettingsConfig = async (): Promise<PhonePeClientConfigOverrides> => {
   const settings = await settingsModel.findOne({ isDeleted: false }).lean();
   if (!settings) return {};

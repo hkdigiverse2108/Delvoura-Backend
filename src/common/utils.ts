@@ -7,10 +7,10 @@ import { userModel } from "../database";
 const jwtSecretKey = process.env.JWT_TOKEN_SECRET;
 
 export class apiResponse {
-    private status:number | null;
-    private message:string |null;
-    private data:any | null;
-    private error:any | null;
+    status: number | null;
+    message: string | null;
+    data: any | null;
+    error: any | null;
 
     constructor(status:number,message:string,data:any,error:any){
         this.status=status;

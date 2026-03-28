@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { authController } from "../controllers";
-import { adminJwt, authJwt, userJwt } from "../helper";
+import { authJwt, userJwt } from "../helper";
 
 const router = Router();
 

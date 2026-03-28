@@ -32,11 +32,6 @@ export const createData = async (modelName, objToSave) => {
     return new modelName(objToSave).save();
 }
 
-export const insertMany = async (modelName, objToSave) => {
-    // const users = objToSave.map(user => new User(user));
-    // return modelName.insertMany(users);
-}
-
 export async function aggregateData(modelName, criteria) {
     return modelName.aggregate(criteria);
 }

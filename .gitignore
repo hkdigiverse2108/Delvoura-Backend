@@ -7,6 +7,8 @@ test.html
 *.bat
 .env
 images
+!public/images/
+!public/images/**
 pdf
 debug_output.txt
 postman_collection.json
