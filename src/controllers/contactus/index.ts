@@ -1,7 +1,7 @@
 import { apiResponse, getPaginationState, HTTP_STATUS, isValidObjectId, parseDateRange, resolvePagination } from "../../common";
 import { contactUsModel } from "../../database";
 import { contact_us_mail, countData, createData, getDataWithSorting, getFirstMatch, reqInfo, responseMessage, updateData } from "../../helper";
-import { createContactUsSchema, deleteContactUsSchema, getContactUsSchema, updateContactUsSchema } from "../../validation";
+import { createContactUsSchema, deleteContactUsSchema, getContactUsSchema } from "../../validation";
 
 export const createContactUs = async (req, res) => {
   reqInfo(req);
@@ -25,22 +25,6 @@ export const createContactUs = async (req, res) => {
   }
 };
 
-export const updateContactUs = async (req, res) => {
-  reqInfo(req);
-  try {
-    const { error, value } = updateContactUsSchema.validate(req.body || {});
-    if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
-
-    const existing = await getFirstMatch(contactUsModel, { _id: isValidObjectId(value.contactUsId), isDeleted: false }, {}, {});
-    if (!existing) return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("Contact us"), {}, {}));
-
-    const updated = await updateData(contactUsModel, { _id: isValidObjectId(value.contactUsId) }, value, {});
-    return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.updateDataSuccess("Contact us"), updated, {}));
-  } catch (error) {
-    console.log(error);
-    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.internalServerError, {}, error));
-  }
-};
 
 export const deleteContactUs = async (req, res) => {
   reqInfo(req);

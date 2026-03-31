@@ -1,7 +1,7 @@
 import { apiResponse, getPaginationState, HTTP_STATUS, isValidObjectId, parseDateRange, resolvePagination } from "../../common";
 import { newsletterModel } from "../../database";
 import { countData, createData, getDataWithSorting, getFirstMatch, reqInfo, responseMessage, updateData } from "../../helper";
-import { createNewsletterSchema, deleteNewsletterSchema, getNewslettersSchema, updateNewsletterSchema } from "../../validation";
+import { createNewsletterSchema, deleteNewsletterSchema, getNewslettersSchema } from "../../validation";
 
 export const createNewsletter = async (req, res) => {
   reqInfo(req);
@@ -23,27 +23,6 @@ export const createNewsletter = async (req, res) => {
   }
 };
 
-export const updateNewsletter = async (req, res) => {
-  reqInfo(req);
-  try {
-    const { error, value } = updateNewsletterSchema.validate(req.body || {});
-    if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
-
-    const existing = await getFirstMatch(newsletterModel, { _id: isValidObjectId(value.newsletterId), isDeleted: false }, {}, {});
-    if (!existing) return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("Newsletter"), {}, {}));
-
-    const emailValue = value.email.toLowerCase();
-    const isExist = await getFirstMatch(newsletterModel, { email: emailValue, _id: { $ne: isValidObjectId(value.newsletterId) }, isDeleted: false }, {}, {});
-    if (isExist) return res.status(HTTP_STATUS.CONFLICT).json(new apiResponse(HTTP_STATUS.CONFLICT, responseMessage.dataAlreadyExist("Email"), {}, {}));
-    value.email = emailValue;
-
-    const updated = await updateData(newsletterModel, { _id: isValidObjectId(value.newsletterId) }, value, {});
-    return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.updateDataSuccess("Newsletter"), updated, {}));
-  } catch (error) {
-    console.log(error);
-    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.internalServerError, {}, error));
-  }
-};
 
 export const deleteNewsletter = async (req, res) => {
   reqInfo(req);

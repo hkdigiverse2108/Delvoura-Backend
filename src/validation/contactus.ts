@@ -8,15 +8,6 @@ export const createContactUsSchema = Joi.object({
   message: Joi.string().required(),
 });
 
-export const updateContactUsSchema = Joi.object({
-  contactUsId: Joi.string().required(),
-  fullName: Joi.string().required(),
-  email: Joi.string().email().required(),
-  countryCode: Joi.string().allow("", null).optional(),
-  phone: Joi.string().allow("", null).optional(),
-  message: Joi.string().required(),
-  isRead: Joi.boolean().optional(),
-});
 
 export const deleteContactUsSchema = Joi.object({
   id: Joi.string().required(),

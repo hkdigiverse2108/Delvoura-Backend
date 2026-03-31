@@ -4,12 +4,6 @@ export const createNewsletterSchema = Joi.object({
   email: Joi.string().email().required(),
 });
 
-export const updateNewsletterSchema = Joi.object({
-  newsletterId: Joi.string().required(),
-  email: Joi.string().email().required(),
-  isActive: Joi.boolean().optional(),
-});
-
 export const deleteNewsletterSchema = Joi.object({
   id: Joi.string().required(),
 });
