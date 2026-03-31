@@ -1,38 +1,13 @@
-import { apiResponse, getPaginationState, HTTP_STATUS, isValidObjectId, parseDateRange, resolvePagination } from "../../common";
+import { apiResponse, getPaginationState, HTTP_STATUS, INSTAGRAM_MEDIA_TYPES, isValidObjectId, parseDateRange, resolvePagination } from "../../common";
 import { instagramModel } from "../../database";
 import { countData, createData, getDataWithSorting, getFirstMatch, reqInfo, responseMessage, updateData } from "../../helper";
 import { addEditInstagramSchema, createInstagramSchema, deleteInstagramSchema, getInstagramByIdSchema, getInstagramsSchema, updateInstagramSchema } from "../../validation";
 
-export const add_edit_instagram = async (req, res) => {
-  reqInfo(req);
-  try {
-    const { error, value } = addEditInstagramSchema.validate(req.body || {});
-    if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
-
-    if (value.instagramId) {
-      const instagramId = isValidObjectId(value.instagramId);
-      if (!instagramId) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Instagram"), {}, {}));
-
-      const existing = await getFirstMatch(instagramModel, { _id: instagramId, isDeleted: false }, {}, {});
-      if (!existing) return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("Instagram"), {}, {}));
-
-      const { instagramId: _ignore, ...payload } = value;
-      const updated = await updateData(instagramModel, { _id: instagramId }, payload, {});
-      return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.updateDataSuccess("Instagram"), updated, {}));
-    }
-
-    const response = await createData(instagramModel, value);
-    return res.status(HTTP_STATUS.CREATED).json(new apiResponse(HTTP_STATUS.CREATED, responseMessage.addDataSuccess("Instagram"), response, {}));
-  } catch (error) {
-    console.log(error);
-    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.internalServerError, {}, error));
-  }
-};
-
 export const createInstagram = async (req, res) => {
   reqInfo(req);
   try {
-    const { error, value } = createInstagramSchema.validate(req.body || {});
+    const payload = inferInstagramType(req.body || {});
+    const { error, value } = createInstagramSchema.validate(payload);
     if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
 
     const response = await createData(instagramModel, value);
@@ -46,7 +21,8 @@ export const createInstagram = async (req, res) => {
 export const updateInstagram = async (req, res) => {
   reqInfo(req);
   try {
-    const { error, value } = updateInstagramSchema.validate(req.body || {});
+    const payload = inferInstagramType(req.body || {});
+    const { error, value } = updateInstagramSchema.validate(payload);
     if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
 
     const instagramId = isValidObjectId(value.instagramId);
@@ -55,8 +31,8 @@ export const updateInstagram = async (req, res) => {
     const existing = await getFirstMatch(instagramModel, { _id: instagramId, isDeleted: false }, {}, {});
     if (!existing) return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("Instagram"), {}, {}));
 
-    const { instagramId: _ignore, ...payload } = value;
-    const updated = await updateData(instagramModel, { _id: instagramId }, payload, {});
+    const { instagramId: _ignore, ...updatePayload } = value;
+    const updated = await updateData(instagramModel, { _id: instagramId }, updatePayload, {});
     return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.updateDataSuccess("Instagram"), updated, {}));
   } catch (error) {
     console.log(error);
@@ -110,9 +86,8 @@ export const getInstagrams = async (req, res) => {
     }
 
     const dateRange = parseDateRange(startDateFilter, endDateFilter);
-    if (startDateFilter && endDateFilter && !dateRange) {
-      return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.customMessage("Invalid date filter"), {}, {}));
-    }
+    if (startDateFilter && endDateFilter && !dateRange) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.customMessage("Invalid date filter"), {}, {}));
+    
     if (dateRange) {
       criteria.createdAt = { $gte: dateRange.startDate, $lte: dateRange.endDate };
     }
@@ -151,4 +126,26 @@ export const getInstagramById = async (req, res) => {
     console.log(error);
     return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.internalServerError, {}, error));
   }
+};
+
+const inferInstagramType = (payload: any) => {
+  if (!payload) return payload;
+
+  if (typeof payload.type === "string" && payload.type.trim() !== "") {
+    return payload;
+  }
+
+  const imageUrl = payload.imageUrl;
+  const videoUrl = payload.videoUrl;
+  const hasImage = typeof imageUrl === "string" && imageUrl.trim() !== "";
+  const hasVideo = typeof videoUrl === "string" && videoUrl.trim() !== "";
+
+  if (hasImage && !hasVideo) {
+    return { ...payload, type: INSTAGRAM_MEDIA_TYPES.IMG };
+  }
+  if (hasVideo && !hasImage) {
+    return { ...payload, type: INSTAGRAM_MEDIA_TYPES.VIDEO };
+  }
+
+  return payload;
 };

@@ -8,3 +8,8 @@ export const PRODUCT_GENDERS = {
   MEN: "men",
   UNISEX: "unisex",
 } as const;
+
+export const INSTAGRAM_MEDIA_TYPES = {
+  IMG: "img",
+  VIDEO: "video",
+} as const;

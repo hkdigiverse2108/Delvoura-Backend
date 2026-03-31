@@ -1,9 +1,11 @@
 import mongoose from "mongoose";
+import { INSTAGRAM_MEDIA_TYPES } from "../../common/enum";
 import type { Instagram } from "../../types";
 
 const instagramSchema = new mongoose.Schema<Instagram>(
   {
-    imageUrl: { type: String, required: true },
+    type: { type: String, enum: [INSTAGRAM_MEDIA_TYPES.IMG, INSTAGRAM_MEDIA_TYPES.VIDEO], required: true },
+    imageUrl: { type: String, default: null },
     link: { type: String, required: true },
     videoUrl: { type: String, default: null },
     isActive: { type: Boolean, default: true },
