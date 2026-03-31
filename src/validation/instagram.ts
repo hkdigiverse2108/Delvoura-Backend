@@ -14,9 +14,6 @@ const enforceSingleMediaByType = (value, helpers) => {
   if (value.type === INSTAGRAM_MEDIA_TYPES.IMG && hasVideo) {
     return helpers.message("videoUrl must be empty when type is img.");
   }
-  if (value.type === INSTAGRAM_MEDIA_TYPES.VIDEO && hasImage) {
-    return helpers.message("imageUrl must be empty when type is video.");
-  }
 
   return value;
 };
