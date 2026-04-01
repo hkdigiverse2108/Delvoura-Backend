@@ -60,7 +60,7 @@ export const getRatings = async (req, res) => {
     const { error, value } = getRatingsSchema.validate(req.query);
     if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
 
-    const { page, limit, search, startDateFilter, endDateFilter } = value;
+    const { page, limit, search, starRatingFilter, startDateFilter, endDateFilter } = value;
     const authUser = req?.headers?.user as any;
     const isAdmin = authUser?.roles === USER_ROLES.ADMIN;
     let criteria: any = { isDeleted: false }, options: any = { lean: true, sort: { createdAt: -1 } };
@@ -87,13 +87,39 @@ export const getRatings = async (req, res) => {
       criteria.productId = product._id;
     }
 
+    if (typeof starRatingFilter !== "undefined") {
+      criteria.starRating = starRatingFilter;
+    }
+
     if (search) {
-      criteria.$or = [
+      const searchCriteria: any[] = [
         { firstName: { $regex: search, $options: "si" } },
         { lastName: { $regex: search, $options: "si" } },
         { email: { $regex: search, $options: "si" } },
         { description: { $regex: search, $options: "si" } },
       ];
+
+      if (isAdmin) {
+        const matchedProducts = await getDataWithSorting(
+          productModel,
+          {
+            isDeleted: false,
+            $or: [
+              { name: { $regex: search, $options: "si" } },
+              { title: { $regex: search, $options: "si" } },
+            ],
+          },
+          { _id: 1 },
+          {}
+        );
+
+        const matchedProductIds = matchedProducts.map((product) => product?._id).filter(Boolean);
+        if (matchedProductIds.length) {
+          searchCriteria.push({ productId: { $in: matchedProductIds } });
+        }
+      }
+
+      criteria.$or = searchCriteria;
     }
 
     const dateRange = parseDateRange(startDateFilter, endDateFilter);
@@ -111,13 +137,7 @@ export const getRatings = async (req, res) => {
     }
 
     const response = isAdmin
-      ? await findAllWithPopulateWithSorting(
-          ratingModel,
-          criteria,
-          {},
-          options,
-          { path: "productId", select: "name title coverimage slug isActive" }
-        )
+      ? await findAllWithPopulateWithSorting(ratingModel,criteria,{},options,{ path: "productId", select: "name title coverimage slug isActive" })
       : await getDataWithSorting(ratingModel, criteria, {}, options);
     const totalCount = await countData(ratingModel, criteria);
 

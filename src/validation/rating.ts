@@ -27,6 +27,7 @@ export const getRatingsSchema = Joi.object({
   page: Joi.number().optional(),
   limit: Joi.number().optional(),
   search: Joi.string().optional(),
+  starRatingFilter: Joi.number().min(1).max(5).optional(),
   startDateFilter: Joi.string().optional(),
   endDateFilter: Joi.string().optional(),
 });
