@@ -23,7 +23,7 @@ export const deleteRatingSchema = Joi.object({
 });
 
 export const getRatingsSchema = Joi.object({
-  productId: Joi.string().required(),
+  productId: Joi.string().optional(),
   page: Joi.number().optional(),
   limit: Joi.number().optional(),
   search: Joi.string().optional(),

@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { userJwt } from "../helper";
 import { ratingController } from "../controllers";
 
 const router = Router();
@@ -6,6 +7,6 @@ const router = Router();
 router.post("/add", ratingController.createRating);
 router.put("/edit", ratingController.updateRating);
 router.delete("/:id", ratingController.deleteRating);
-router.get("/", ratingController.getRatings);
+router.get("/", userJwt, ratingController.getRatings);
 
 export const ratingRouter = router;

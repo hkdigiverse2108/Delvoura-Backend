@@ -1,6 +1,6 @@
-import { apiResponse, getPaginationState, HTTP_STATUS, isValidObjectId, parseDateRange, resolvePagination } from "../../common";
+import { apiResponse, getPaginationState, HTTP_STATUS, isValidObjectId, parseDateRange, resolvePagination, USER_ROLES } from "../../common";
 import { productModel, ratingModel } from "../../database";
-import { countData, createData, getDataWithSorting, getFirstMatch, reqInfo, responseMessage, updateData } from "../../helper";
+import { countData, createData, findAllWithPopulateWithSorting, getDataWithSorting, getFirstMatch, reqInfo, responseMessage, updateData } from "../../helper";
 import { createRatingSchema, deleteRatingSchema, getRatingsSchema, updateRatingSchema } from "../../validation";
 
 export const createRating = async (req, res) => {
@@ -60,11 +60,32 @@ export const getRatings = async (req, res) => {
     const { error, value } = getRatingsSchema.validate(req.query);
     if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
 
-    const product = await getFirstMatch(productModel, { _id: isValidObjectId(value.productId), isDeleted: false }, {}, {});
-    if (!product) return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("Product"), {}, {}));
-
     const { page, limit, search, startDateFilter, endDateFilter } = value;
-    let criteria: any = { productId: product._id, isDeleted: false }, options: any = { lean: true, sort: { createdAt: -1 } };
+    const authUser = req?.headers?.user as any;
+    const isAdmin = authUser?.roles === USER_ROLES.ADMIN;
+    let criteria: any = { isDeleted: false }, options: any = { lean: true, sort: { createdAt: -1 } };
+
+    if (!isAdmin) {
+      if (!value.productId) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.customMessage("productId is required"), {}, {}));
+      }
+
+      const validProductId = isValidObjectId(value.productId);
+      if (!validProductId) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Product"), {}, {}));
+
+      const product = await getFirstMatch(productModel, { _id: validProductId, isDeleted: false }, {}, {});
+      if (!product) return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("Product"), {}, {}));
+
+      criteria.productId = product._id;
+    } else if (value.productId) {
+      const validProductId = isValidObjectId(value.productId);
+      if (!validProductId) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Product"), {}, {}));
+
+      const product = await getFirstMatch(productModel, { _id: validProductId, isDeleted: false }, {}, {});
+      if (!product) return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("Product"), {}, {}));
+
+      criteria.productId = product._id;
+    }
 
     if (search) {
       criteria.$or = [
@@ -89,7 +110,15 @@ export const getRatings = async (req, res) => {
       options.limit = limitValue;
     }
 
-    const response = await getDataWithSorting(ratingModel, criteria, {}, options);
+    const response = isAdmin
+      ? await findAllWithPopulateWithSorting(
+          ratingModel,
+          criteria,
+          {},
+          options,
+          { path: "productId", select: "name title coverimage slug isActive" }
+        )
+      : await getDataWithSorting(ratingModel, criteria, {}, options);
     const totalCount = await countData(ratingModel, criteria);
 
     const stateObj = getPaginationState(totalCount, pageValue, limitValue);
@@ -100,4 +129,3 @@ export const getRatings = async (req, res) => {
     return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.internalServerError, {}, error));
   }
 };
-
