@@ -3,53 +3,6 @@ import { addressModel, orderModel, productModel, userModel } from "../../databas
 import { countData, createData, getData, getFirstMatch, reqInfo, responseMessage, updateData } from "../../helper";
 import { createOrderSchema, getOrderByIdSchema, getOrdersSchema, updateOrderShippingAddressSchema } from "../../validation";
 
-const normalizeShippingAddress = (shippingAddress: any) => {
-  const normalized = Array.isArray(shippingAddress) ? shippingAddress : [shippingAddress];
-  let hasDefault = false;
-
-  return normalized.map((address: any) => {
-    if (address?.default === true && !hasDefault) {
-      hasDefault = true;
-      return { ...address, default: true };
-    }
-
-    return { ...address, default: false };
-  });
-};
-
-const createOrderWithRetry = async (payload: any, retryCount = 5) => {
-  while (retryCount--) {
-    try {
-      return await createData(orderModel, payload);
-    } catch (error: any) {
-      if (!(error?.code === 11000 && error?.keyPattern?.orderId)) throw error;
-    }
-  }
-
-  throw new Error("OrderId generation failed");
-};
-
-const normalizeOrderItems = (items: any[] = []) => {
-  return items.map((item: any) => {
-    const productValue = item?.productId;
-    const productId = productValue?._id || productValue || null;
-
-    return {
-      ...item,
-      productId,
-      productName: String(item?.productName || productValue?.name || ""),
-    };
-  });
-};
-
-const normalizeOrderResponse = (order: any) => {
-  if (!order) return order;
-
-  return {
-    ...order,
-    items: normalizeOrderItems(order.items || []),
-  };
-};
 
 export const createOrder = async (req, res) => {
   reqInfo(req);
@@ -255,3 +208,50 @@ export const updateOrderShippingAddress = async (req, res) => {
   }
 };
 
+const normalizeShippingAddress = (shippingAddress: any) => {
+  const normalized = Array.isArray(shippingAddress) ? shippingAddress : [shippingAddress];
+  let hasDefault = false;
+
+  return normalized.map((address: any) => {
+    if (address?.default === true && !hasDefault) {
+      hasDefault = true;
+      return { ...address, default: true };
+    }
+
+    return { ...address, default: false };
+  });
+};
+
+const createOrderWithRetry = async (payload: any, retryCount = 5) => {
+  while (retryCount--) {
+    try {
+      return await createData(orderModel, payload);
+    } catch (error: any) {
+      if (!(error?.code === 11000 && error?.keyPattern?.orderId)) throw error;
+    }
+  }
+
+  throw new Error("OrderId generation failed");
+};
+
+const normalizeOrderItems = (items: any[] = []) => {
+  return items.map((item: any) => {
+    const productValue = item?.productId;
+    const productId = productValue?._id || productValue || null;
+
+    return {
+      ...item,
+      productId,
+      productName: String(item?.productName || productValue?.name || ""),
+    };
+  });
+};
+
+const normalizeOrderResponse = (order: any) => {
+  if (!order) return order;
+
+  return {
+    ...order,
+    items: normalizeOrderItems(order.items || []),
+  };
+};
