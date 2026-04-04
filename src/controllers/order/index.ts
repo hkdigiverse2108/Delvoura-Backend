@@ -233,10 +233,43 @@ export const getOrders = async (req, res) => {
       options.limit = limitValue;
     }
 
-    const response = await getDataWithSorting(orderModel, criteria, {}, options);
+  const response = await orderModel
+  .find(criteria)
+  .populate("items.productId", "name price image")
+  .sort({ createdAt: -1 })
+  .lean();
     const totalCount = await countData(orderModel, criteria);
 
     const enrichedOrders = await attachUsersToOrders(response);
+    // 🔥 all product ids collect
+const productIds: any[] = [];
+
+enrichedOrders.forEach((order: any) => {
+  order.items?.forEach((item: any) => {
+    if (item.productId) productIds.push(item.productId);
+  });
+});
+
+const uniqueProductIds = [...new Set(productIds)];
+
+const products = await getData(
+  productModel,
+  { _id: { $in: uniqueProductIds }, isDeleted: false },
+  { name: 1, price: 1, image: 1 },
+  {}
+);
+
+const productMap = new Map();
+products.forEach((p: any) => {
+  productMap.set(String(p._id), p);
+});
+
+enrichedOrders.forEach((order: any) => {
+  order.items = order.items?.map((item: any) => ({
+    ...item,
+    product: productMap.get(String(item.productId)) || null
+  }));
+});
     const stateObj = getPaginationState(totalCount, pageValue, limitValue);
 
     return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.getDataSuccess("Orders"), { order_data: enrichedOrders, totalData: totalCount, state: stateObj }, {}));
@@ -269,6 +302,28 @@ export const getOrderById = async (req, res) => {
     }
 
     const enrichedOrder = await attachUserToOrder(order);
+    // 🔥 product ids collect karo
+const productIds = (enrichedOrder.items || []).map((item: any) => item.productId);
+
+// products fetch karo
+const products = await getData(
+  productModel,
+  { _id: { $in: productIds }, isDeleted: false },
+  { name: 1, price: 1, image: 1 },
+  {}
+);
+
+// map create karo
+const productMap = new Map();
+products.forEach((p: any) => {
+  productMap.set(String(p._id), p);
+});
+
+// items me product attach karo
+enrichedOrder.items = enrichedOrder.items.map((item: any) => ({
+  ...item,
+  product: productMap.get(String(item.productId)) || null
+}));
 
     return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.getDataSuccess("Order"), enrichedOrder, {}));
   } catch (error) {
