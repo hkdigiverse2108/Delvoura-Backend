@@ -1,4 +1,4 @@
-import { apiResponse, getPaginationState, HTTP_STATUS, isValidObjectId, parseDateRange, resolvePagination, USER_ROLES } from "../../common";
+﻿import { apiResponse, getPaginationState, HTTP_STATUS, isValidObjectId, parseDateRange, resolvePagination, USER_ROLES } from "../../common";
 import { addressModel, orderModel, productModel, userModel } from "../../database";
 import { countData, createData, getData, getDataWithSorting, getFirstMatch, reqInfo, responseMessage, updateData, updateMany } from "../../helper";
 import { createOrderSchema, getOrderByIdSchema, getOrdersSchema, updateOrderShippingAddressSchema } from "../../validation";
@@ -131,7 +131,7 @@ export const createOrder = async (req, res) => {
 
       if (validProductIds.some((id) => !id)) { return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Product"), {}, {})); }
 
-      const products = await getData(productModel, { _id: { $in: validProductIds }, isDeleted: false }, {}, {});
+      const products = await getData(productModel, { _id: { $in: validProductIds }, isDeleted: false }, {name:1, price:1, image:1}, {});
 
       if (products.length !== validProductIds.length) { return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("Product"), {}, {})); }
     }
