@@ -3,6 +3,7 @@ import type mongoose from "mongoose";
 export type Order = {
   userId?: mongoose.Types.ObjectId | null;
   addressId?: mongoose.Types.ObjectId | null;
+  orderId?: string;
   firstName: string;
   lastName: string;
   email: string;

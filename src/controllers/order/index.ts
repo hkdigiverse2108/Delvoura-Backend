@@ -28,6 +28,19 @@ const normalizeShippingAddress = (shippingAddress: any) => {
   });
 };
 
+const createOrderWithUniqueOrderId = async (payload: any, maxRetries = 5) => {
+  for (let attempt = 0; attempt < maxRetries; attempt += 1) {
+    try {
+      return await createData(orderModel, payload);
+    } catch (error: any) {
+      const duplicateOrderId = error?.code === 11000 && error?.keyPattern?.orderId;
+      if (!duplicateOrderId || attempt === maxRetries - 1) throw error;
+    }
+  }
+
+  throw new Error("Unable to generate unique orderId");
+};
+
 export const createOrder = async (req, res) => {
   reqInfo(req);
   try {
@@ -164,7 +177,7 @@ export const createOrder = async (req, res) => {
     value.subtotal = subtotal;
     value.total = subtotal;
 
-    const response = await createData(orderModel, value);
+    const response = await createOrderWithUniqueOrderId(value);
     return res.status(HTTP_STATUS.CREATED).json(new apiResponse(HTTP_STATUS.CREATED, responseMessage.addDataSuccess("Order"), response, {}));
   } catch (error) {
     console.log(error);
@@ -197,6 +210,7 @@ export const getOrders = async (req, res) => {
 
     if (search) {
       criteria.$or = [
+        { orderId: { $regex: search, $options: "si" } },
         { email: { $regex: search, $options: "si" } },
         { firstName: { $regex: search, $options: "si" } },
         { lastName: { $regex: search, $options: "si" } },
@@ -336,4 +350,3 @@ const attachUsersToOrders = async (orders: any[]) => {
     return { ...order, user: user || null };
   });
 };
-
