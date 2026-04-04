@@ -10,6 +10,20 @@ const logPhonePeError = (_label: string, _error: any) => {};
 
 const logPhonePeInfo = (_label: string, _data: any) => {};
 
+const buildOrderLookupCriteria = (rawOrderId: string) => {
+  const normalizedOrderId = String(rawOrderId || "").trim();
+  const objectId = isValidObjectId(normalizedOrderId);
+
+  if (objectId) {
+    return {
+      isDeleted: false,
+      $or: [{ _id: objectId }, { orderId: normalizedOrderId.toUpperCase() }],
+    };
+  }
+
+  return { orderId: normalizedOrderId.toUpperCase(), isDeleted: false };
+};
+
 export const create_phonepe_payment = async (req, res) => {
   reqInfo(req);
   try {
@@ -20,17 +34,14 @@ export const create_phonepe_payment = async (req, res) => {
     const { amount, amountUnit, expireAfter, message, metaInfo, redirectUrl, callbackUrl, orderId } = value;
     const merchantOrderId = value.merchantOrderId || generateMerchantOrderId();
 
-    let resolvedOrderId: string | false = false;
+    let resolvedOrderId: string | null = null;
     let orderData: any = null;
     if (orderId) {
-      resolvedOrderId = isValidObjectId(orderId);
-      if (!resolvedOrderId) {
-        return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Order"), {}, {}));
-      }
-      orderData = await getFirstMatch(orderModel, { _id: resolvedOrderId, isDeleted: false }, {}, {});
+      orderData = await getFirstMatch(orderModel, buildOrderLookupCriteria(orderId), {}, {});
       if (!orderData) {
         return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("Order"), {}, {}));
       }
+      resolvedOrderId = String(orderData?._id);
     }
 
     const { redirectUrl: fallbackRedirectUrl, callbackUrl: fallbackCallbackUrl } = getPhonePeRedirectUrls();
@@ -101,7 +112,7 @@ export const create_phonepe_payment = async (req, res) => {
       await updateData(orderModel, { _id: resolvedOrderId }, { phonePeId: merchantOrderId }, {});
     }
 
-    return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.customMessage("Payment initiated"), { merchantOrderId, phonepe: response.data }, {}));
+    return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.customMessage("Payment initiated"), { merchantOrderId, orderId: orderData?.orderId || null, phonepe: response.data }, {}));
   } catch (error: any) {
     logPhonePeError("Create payment failed", error);
     const errorPayload = error?.response?.data || error;

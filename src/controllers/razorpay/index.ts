@@ -5,6 +5,20 @@ import { getFirstMatch, getRazorpayAuthHeader, getRazorpayClientConfig, getRazor
 import type { RazorpayClientConfigOverrides } from "../../helper";
 import { createRazorpayPaymentSchema, razorpayOrderStatusByOrderIdSchema, razorpayOrderStatusSchema, razorpayPaymentVerifySchema, razorpayRefundSchema, razorpayRefundStatusSchema } from "../../validation";
 
+const buildOrderLookupCriteria = (rawOrderId: string) => {
+  const normalizedOrderId = String(rawOrderId || "").trim();
+  const objectId = isValidObjectId(normalizedOrderId);
+
+  if (objectId) {
+    return {
+      isDeleted: false,
+      $or: [{ _id: objectId }, { orderId: normalizedOrderId.toUpperCase() }],
+    };
+  }
+
+  return { orderId: normalizedOrderId.toUpperCase(), isDeleted: false };
+};
+
 export const create_razorpay_payment = async (req, res) => {
   reqInfo(req);
   try {
@@ -14,17 +28,14 @@ export const create_razorpay_payment = async (req, res) => {
     const { amount, amountUnit, currency, receipt, notes, orderId } = value;
     const paymentCapture = value.payment_capture ?? value.paymentCapture;
 
-    let resolvedOrderId: string | false = false;
+    let resolvedOrderId: string | null = null;
     let orderData: any = null;
     if (orderId) {
-      resolvedOrderId = isValidObjectId(orderId);
-      if (!resolvedOrderId) {
-        return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Order"), {}, {}));
-      }
-      orderData = await getFirstMatch(orderModel, { _id: resolvedOrderId, isDeleted: false }, {}, {});
+      orderData = await getFirstMatch(orderModel, buildOrderLookupCriteria(orderId), {}, {});
       if (!orderData) {
         return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("Order"), {}, {}));
       }
+      resolvedOrderId = String(orderData?._id);
     }
 
     let effectiveAmount = amount;
@@ -50,8 +61,8 @@ export const create_razorpay_payment = async (req, res) => {
       currency: currency || orderData?.currency || "INR",
     };
 
-    if (receipt || orderData?._id) {
-      payload.receipt = receipt || `order_${orderData?._id}`;
+    if (receipt || orderData?._id || orderData?.orderId) {
+      payload.receipt = receipt || `order_${orderData?.orderId || orderData?._id}`;
     }
 
     if (notes) payload.notes = notes;
@@ -73,7 +84,7 @@ export const create_razorpay_payment = async (req, res) => {
 
     return res
       .status(HTTP_STATUS.OK)
-      .json(new apiResponse(HTTP_STATUS.OK, responseMessage.customMessage("Payment initiated"), { razorpayOrderId, razorpayKeyId: keyId, razorpay: response.data }, {}));
+      .json(new apiResponse(HTTP_STATUS.OK, responseMessage.customMessage("Payment initiated"), { razorpayOrderId, orderId: orderData?.orderId || null, razorpayKeyId: keyId, razorpay: response.data }, {}));
   } catch (error: any) {
     const errorPayload = error?.response?.data || error;
     return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.internalServerError, {}, errorPayload));
@@ -102,9 +113,9 @@ export const razorpay_verify_payment = async (req, res) => {
 
     let criteria: any = { razorpayId: razorpayOrderId, isDeleted: false };
     if (value.orderId) {
-      const orderId = isValidObjectId(value.orderId);
-      if (!orderId) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Order"), {}, {}));
-      criteria = { _id: orderId, isDeleted: false };
+      const order = await getFirstMatch(orderModel, buildOrderLookupCriteria(value.orderId), {}, {});
+      if (!order) return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("Order"), {}, {}));
+      criteria = { _id: order._id, isDeleted: false };
     }
 
     const updatePayload: any = { paymentStatus: "paid" };
@@ -156,10 +167,7 @@ export const razorpay_order_status_by_order = async (req, res) => {
     const { error, value } = razorpayOrderStatusByOrderIdSchema.validate(req.params || {});
     if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
 
-    const orderId = isValidObjectId(value.orderId);
-    if (!orderId) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Order"), {}, {}));
-
-    const order = await getFirstMatch(orderModel, { _id: orderId, isDeleted: false }, {}, {});
+    const order = await getFirstMatch(orderModel, buildOrderLookupCriteria(value.orderId), {}, {});
     if (!order) return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("Order"), {}, {}));
 
     if (!order?.razorpayId) {
@@ -176,7 +184,7 @@ export const razorpay_order_status_by_order = async (req, res) => {
 
     const statusValue = response.data?.status || response.data?.data?.status;
     if (statusValue) {
-      await updateData(orderModel, { _id: orderId, isDeleted: false }, { paymentStatus: String(statusValue) }, {});
+      await updateData(orderModel, { _id: order._id, isDeleted: false }, { paymentStatus: String(statusValue) }, {});
     }
 
     return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.getDataSuccess("order status"), response.data, {}));
