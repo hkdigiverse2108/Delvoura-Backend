@@ -1,74 +1,118 @@
-﻿import { apiResponse, getPaginationState, HTTP_STATUS, isValidObjectId, parseDateRange, resolvePagination, USER_ROLES } from "../../common";
+﻿import { apiResponse, getPaginationState, HTTP_STATUS, isValidObjectId, resolvePagination, USER_ROLES } from "../../common";
 import { addressModel, orderModel, productModel, userModel } from "../../database";
-import { countData, createData, getData, getDataWithSorting, getFirstMatch, reqInfo, responseMessage, updateData, updateMany } from "../../helper";
+import { countData, createData, getData, getFirstMatch, reqInfo, responseMessage, updateData } from "../../helper";
 import { createOrderSchema, getOrderByIdSchema, getOrdersSchema, updateOrderShippingAddressSchema } from "../../validation";
-
-const userProjection = { password: 0, otp: 0, otpExpireTime: 0, __v: 0 };
-
-const resolveOrderEmail = (order: any) => {
-  if (!order) return "";
-  const raw = order.email || order.contactEmail;
-  return raw ? String(raw).toLowerCase() : "";
-};
 
 const normalizeShippingAddress = (shippingAddress: any) => {
   const normalized = Array.isArray(shippingAddress) ? shippingAddress : [shippingAddress];
-  if (!normalized.length) return normalized;
+  let hasDefault = false;
 
-  const hasDefault = normalized.some((address) => address?.default === true);
-  if (!hasDefault) return normalized;
-
-  let defaultSet = false;
-  return normalized.map((address) => {
-    if (address?.default === true && !defaultSet) {
-      defaultSet = true;
+  return normalized.map((address: any) => {
+    if (address?.default === true && !hasDefault) {
+      hasDefault = true;
       return { ...address, default: true };
     }
+
     return { ...address, default: false };
   });
 };
 
-const createOrderWithUniqueOrderId = async (payload: any, maxRetries = 5) => {
-  for (let attempt = 0; attempt < maxRetries; attempt += 1) {
+const createOrderWithRetry = async (payload: any, retryCount = 5) => {
+  while (retryCount--) {
     try {
       return await createData(orderModel, payload);
     } catch (error: any) {
-      const duplicateOrderId = error?.code === 11000 && error?.keyPattern?.orderId;
-      if (!duplicateOrderId || attempt === maxRetries - 1) throw error;
+      if (!(error?.code === 11000 && error?.keyPattern?.orderId)) throw error;
     }
   }
 
-  throw new Error("Unable to generate unique orderId");
+  throw new Error("OrderId generation failed");
+};
+
+const normalizeOrderItems = (items: any[] = []) => {
+  return items.map((item: any) => {
+    const productValue = item?.productId;
+    const productId = productValue?._id || productValue || null;
+
+    return {
+      ...item,
+      productId,
+      productName: String(item?.productName || productValue?.name || ""),
+    };
+  });
+};
+
+const normalizeOrderResponse = (order: any) => {
+  if (!order) return order;
+
+  return {
+    ...order,
+    items: normalizeOrderItems(order.items || []),
+  };
 };
 
 export const createOrder = async (req, res) => {
   reqInfo(req);
   try {
     const { error, value } = createOrderSchema.validate(req.body || {});
-    if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
+    if (error) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
+    }
 
-    const rawEmail = value.email || value.contactEmail;
-    const emailValue = rawEmail ? String(rawEmail).toLowerCase() : "";
+    const authUser = req.headers.user as any;
+    const email = String(value.email || value.contactEmail || "").toLowerCase();
 
-    if (!emailValue) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidEmail, {}, {}));
+    if (!email) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidEmail, {}, {}));
+    }
 
-    value.email = emailValue;
+    value.email = email;
     if ("contactEmail" in value) delete value.contactEmail;
 
-    const authUser = req?.headers?.user as any;
+    let userId = value.userId || authUser?._id;
+    if (userId) {
+      userId = isValidObjectId(String(userId));
+      if (!userId) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("User"), {}, {}));
+      }
 
-    if (!value.addressId && (!value.shippingAddress || value.shippingAddress.length === 0)) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, "Shipping address is required", {}, {}));
+      const existingUser = await getFirstMatch(userModel, { _id: userId, isDeleted: false }, {}, {});
+      if (!existingUser) {
+        return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("User"), {}, {}));
+      }
+    } else {
+      let existingUser = await getFirstMatch(userModel, { email, isDeleted: false }, {}, {});
+
+      if (!existingUser) {
+        existingUser = await createData(userModel, {
+          email,
+          firstName: value.firstName,
+          lastName: value.lastName,
+          roles: USER_ROLES.USER,
+          isActive: true,
+          isDeleted: false,
+        });
+      }
+
+      userId = existingUser?._id;
+    }
+
+    value.userId = userId;
+
+    if (!value.addressId && !value.shippingAddress?.length) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, "Shipping address required", {}, {}));
+    }
 
     if (value.addressId) {
-      const addressId = isValidObjectId(value.addressId);
-      if (!addressId) { return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Address"), {}, {})); }
+      const addressId = isValidObjectId(String(value.addressId));
+      if (!addressId) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Address"), {}, {}));
+      }
 
-      if (!authUser?._id) { return res.status(HTTP_STATUS.UNAUTHORIZED).json(new apiResponse(HTTP_STATUS.UNAUTHORIZED, responseMessage.invalidToken, {}, {})); }
       const address = await getFirstMatch(addressModel, { _id: addressId, isDeleted: false }, {}, {});
-
-      if (!address) { return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("Address"), {}, {})); }
-
-      if (String(address.userId) !== String(authUser._id)) { return res.status(HTTP_STATUS.UNAUTHORIZED).json(new apiResponse(HTTP_STATUS.UNAUTHORIZED, responseMessage.accessDenied, {}, {})); }
+      if (!address) {
+        return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, "Address not found", {}, {}));
+      }
 
       value.addressId = addressId;
       value.shippingAddress = [
@@ -84,324 +128,130 @@ export const createOrder = async (req, res) => {
       ];
     }
 
-    if (value.shippingAddress) {
-      value.shippingAddress = normalizeShippingAddress(value.shippingAddress);
+    value.shippingAddress = normalizeShippingAddress(value.shippingAddress);
+
+    const rawProductIds = Array.from(new Set<string>((value.items || []).map((item: any) => String(item.productId))));
+    const validProductIds = rawProductIds.map((productId) => isValidObjectId(String(productId)));
+
+    if (validProductIds.some((productId) => !productId)) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Product"), {}, {}));
     }
 
-    const incomingUserId = value.userId || authUser?._id;
-
-    if (incomingUserId) {
-      const userId = isValidObjectId(incomingUserId);
-      if (!userId) { return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("User"), {}, {})); }
-
-      const userExists = await getFirstMatch(userModel, { _id: userId, isDeleted: false }, {}, {});
-
-      if (!userExists) { return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("User"), {}, {})); }
-
-      value.userId = userId;
-    } else {
-      const existingUser = await getFirstMatch(userModel, { email: emailValue, isDeleted: false }, {}, {});
-
-      if (existingUser) {
-        value.userId = existingUser._id;
-      } else {
-        const phoneRaw = value?.phone;
-        const phoneNumber = phoneRaw
-          ? Number(String(phoneRaw).replace(/[^0-9]/g, ""))
-          : undefined;
-
-        const createdUser = await createData(userModel, {
-          email: emailValue,
-          firstName: value?.firstName,
-          lastName: value?.lastName,
-          roles: USER_ROLES.USER,
-          isActive: true,
-          isDeleted: false,
-          ...(phoneNumber ? { contact: { phoneNo: phoneNumber } } : {}),
-        });
-
-        value.userId = createdUser?._id;
-      }
-    }
-    const rawProductIds = (value.items || []).map((item: any) => item.productId);
-    const uniqueProductIds = Array.from(new Set(rawProductIds));
-
-    if (uniqueProductIds.length > 0) {
-      const validProductIds = uniqueProductIds.map((id) => isValidObjectId(String(id)));
-
-      if (validProductIds.some((id) => !id)) { return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Product"), {}, {})); }
-
-      const products = await getData(productModel, { _id: { $in: validProductIds }, isDeleted: false }, {name:1, price:1, image:1}, {});
-
-      if (products.length !== validProductIds.length) { return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("Product"), {}, {})); }
-    }
-    if (!value.addressId && value.shippingAddress && value.userId) {
-      const normalizedShipping = normalizeShippingAddress(value.shippingAddress);
-      const shippingList = Array.isArray(normalizedShipping) ? normalizedShipping : [normalizedShipping];
-      const addressSource = shippingList.find((address) => address?.default === true) || shippingList[0];
-
-      if (addressSource) {
-        let isDefault = Boolean(addressSource.default);
-        if (!isDefault) {
-          const existingCount = await countData(addressModel, { userId: value.userId, isDeleted: false });
-          if (existingCount === 0) isDefault = true;
-        }
-
-        if (isDefault) {
-          await updateMany(addressModel, { userId: value.userId, isDeleted: false }, { isDefault: false }, {});
-        }
-
-        const createdAddress = await createData(addressModel, {
-          userId: value.userId,
-          country: addressSource.country,
-          address1: addressSource.address1,
-          address2: addressSource.address2 ?? "",
-          city: addressSource.city,
-          state: addressSource.state,
-          pinCode: addressSource.pinCode,
-          isDefault,
-          isActive: true,
-          isDeleted: false,
-        });
-
-        if (createdAddress?._id) {
-          value.addressId = createdAddress._id;
-        }
-      }
+    const products = await getData(productModel, { _id: { $in: validProductIds }, isDeleted: false }, { name: 1 }, {});
+    if (products.length !== validProductIds.length) {
+      return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, "Product not found", {}, {}));
     }
 
-    let subtotal = 0;
+    const productMap = new Map<string, any>(products.map((product: any) => [String(product._id), product]));
+    value.items = (value.items || []).map((item: any) => ({
+      ...item,
+      productId: isValidObjectId(String(item.productId)) || item.productId,
+      productName: String(productMap.get(String(item.productId))?.name || ""),
+    }));
 
-    (value.items || []).forEach((item: any) => {subtotal += Number(item.price) * Number(item.quantity);});
+    value.subtotal = (value.items || []).reduce((sum: number, item: any) => sum + Number(item.price) * Number(item.quantity), 0);
+    value.total = value.subtotal;
 
-    value.subtotal = subtotal;
-    value.total = subtotal;
+    if (!value.addressId) {
+      const address = value.shippingAddress[0];
+      const createdAddress = await createData(addressModel, {
+        userId,
+        country: address.country,
+        address1: address.address1,
+        address2: address.address2 || "",
+        city: address.city,
+        state: address.state,
+        pinCode: address.pinCode,
+        isDefault: Boolean(address.default),
+        isActive: true,
+        isDeleted: false,
+      });
 
-    const response = await createOrderWithUniqueOrderId(value);
-    return res.status(HTTP_STATUS.CREATED).json(new apiResponse(HTTP_STATUS.CREATED, responseMessage.addDataSuccess("Order"), response, {}));
+      value.addressId = createdAddress?._id;
+    }
+
+    const order = await createOrderWithRetry(value);
+    const normalizedOrder = normalizeOrderResponse(order?.toObject ? order.toObject() : order);
+
+    return res.status(HTTP_STATUS.CREATED).json(new apiResponse(HTTP_STATUS.CREATED, "Order created", normalizedOrder, {}));
   } catch (error) {
     console.log(error);
-    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.internalServerError, {}, error));
+    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, "Server error", {}, error));
   }
 };
 
 export const getOrders = async (req, res) => {
   reqInfo(req);
   try {
-    const { error, value } = getOrdersSchema.validate(req.query) as { error: any; value: any };
-    if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
+    const { value, error } = getOrdersSchema.validate(req.query || {});
+    if (error) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.message, {}, {}));
+    }
 
-    const { page, limit, search, startDateFilter, endDateFilter, orderStatus, paymentStatus } = value;
-    let criteria: any = { isDeleted: false }, options: any = { lean: true, sort: { createdAt: -1 } };
+    const { page, limit, search } = value;
+    const authUser = req.headers.user as any;
+    const criteria: any = { isDeleted: false };
 
-    const authUser = req?.headers?.user as any;
-    const isAdmin = authUser?.roles === USER_ROLES.ADMIN;
-    if (!isAdmin) {
-      const ownerOr: any[] = [];
-      if (authUser?._id) ownerOr.push({ userId: authUser._id });
-
-      const authEmail = authUser?.email ? String(authUser.email).toLowerCase() : "";
-      if (authEmail) {ownerOr.push({ email: authEmail }, { contactEmail: authEmail });}
-
-      if (!ownerOr.length) {return res.status(HTTP_STATUS.UNAUTHORIZED).json(new apiResponse(HTTP_STATUS.UNAUTHORIZED, responseMessage.accessDenied, {}, {}));}
-      
-      criteria.$and = criteria.$and ? [...criteria.$and, { $or: ownerOr }] : [{ $or: ownerOr }];
+    if (authUser?.roles !== USER_ROLES.ADMIN) {
+      criteria.$or = [{ userId: authUser?._id }, { email: authUser?.email }];
     }
 
     if (search) {
-      criteria.$or = [
-        { orderId: { $regex: search, $options: "si" } },
-        { email: { $regex: search, $options: "si" } },
-        { firstName: { $regex: search, $options: "si" } },
-        { lastName: { $regex: search, $options: "si" } },
-        { phone: { $regex: search, $options: "si" } },
-      ];
+      criteria.$or = [{ orderId: { $regex: search, $options: "i" } }, { email: { $regex: search, $options: "i" } }];
     }
 
-    if (orderStatus) criteria.orderStatus = orderStatus;
-    if (paymentStatus) criteria.paymentStatus = paymentStatus;
+    const { page: pageValue, limit: limitValue, skip } = resolvePagination(page, limit);
 
-    const dateRange = parseDateRange(startDateFilter, endDateFilter);
-    if (startDateFilter && endDateFilter && !dateRange) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.customMessage("Invalid date filter"), {}, {}));
-    
-    if (dateRange) criteria.createdAt = { $gte: dateRange.startDate, $lte: dateRange.endDate };
-    
+    const orders = await orderModel.find(criteria).populate("items.productId", "name").skip(skip).limit(limitValue || 0).lean();
 
-    const { page: pageValue, limit: limitValue, skip, hasLimit } = resolvePagination(page, limit);
-    if (hasLimit) {
-      options.skip = skip;
-      options.limit = limitValue;
-    }
+    const total = await countData(orderModel, criteria);
+    const normalizedOrders = (orders || []).map((order: any) => normalizeOrderResponse(order));
 
-  const response = await orderModel
-  .find(criteria)
-  .populate("items.productId", "name price image")
-  .sort({ createdAt: -1 })
-  .lean();
-    const totalCount = await countData(orderModel, criteria);
-
-    const enrichedOrders = await attachUsersToOrders(response);
-    // 🔥 all product ids collect
-const productIds: any[] = [];
-
-enrichedOrders.forEach((order: any) => {
-  order.items?.forEach((item: any) => {
-    if (item.productId) productIds.push(item.productId);
-  });
-});
-
-const uniqueProductIds = [...new Set(productIds)];
-
-const products = await getData(
-  productModel,
-  { _id: { $in: uniqueProductIds }, isDeleted: false },
-  { name: 1, price: 1, image: 1 },
-  {}
-);
-
-const productMap = new Map();
-products.forEach((p: any) => {
-  productMap.set(String(p._id), p);
-});
-
-enrichedOrders.forEach((order: any) => {
-  order.items = order.items?.map((item: any) => ({
-    ...item,
-    product: productMap.get(String(item.productId)) || null
-  }));
-});
-    const stateObj = getPaginationState(totalCount, pageValue, limitValue);
-
-    return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.getDataSuccess("Orders"), { order_data: enrichedOrders, totalData: totalCount, state: stateObj }, {}));
+    return res.status(HTTP_STATUS.OK).json(
+      new apiResponse(HTTP_STATUS.OK,"Orders",{  order_data: normalizedOrders,totalData: total, state: getPaginationState(total, pageValue, limitValue),},{})
+    );
   } catch (error) {
-    console.log(error);
-    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.internalServerError, {}, error));
+    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, "Server error", {}, error));
   }
 };
 
 export const getOrderById = async (req, res) => {
   reqInfo(req);
   try {
-    const { error, value } = getOrderByIdSchema.validate(req.params) as { error: any; value: any };
-    if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
-
-    const orderId = isValidObjectId(value.id);
-    if (!orderId) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Order"), {}, {}));
-
-    const order = await getFirstMatch(orderModel, { _id: orderId, isDeleted: false }, {}, {});
-    if (!order) return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("Order"), {}, {}));
-
-    const authUser = req?.headers?.user as any;
-    const isAdmin = authUser?.roles === USER_ROLES.ADMIN;
-    if (!isAdmin) {
-      const authEmail = authUser?.email ? String(authUser.email).toLowerCase() : "";
-      const ownerMatch = authUser?._id && order?.userId && String(order.userId) === String(authUser._id);
-      const emailMatch = authEmail && authEmail === resolveOrderEmail(order);
-
-      if (!ownerMatch && !emailMatch) {return res.status(HTTP_STATUS.UNAUTHORIZED).json(new apiResponse(HTTP_STATUS.UNAUTHORIZED, responseMessage.accessDenied, {}, {}));}
+    const { value, error } = getOrderByIdSchema.validate(req.params || {});
+    if (error) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.message, {}, {}));
     }
 
-    const enrichedOrder = await attachUserToOrder(order);
-    // 🔥 product ids collect karo
-const productIds = (enrichedOrder.items || []).map((item: any) => item.productId);
+    const order = await orderModel.findById(value.id).populate("items.productId", "name").lean();
+    if (!order) {
+      return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, "Not found", {}, {}));
+    }
 
-// products fetch karo
-const products = await getData(
-  productModel,
-  { _id: { $in: productIds }, isDeleted: false },
-  { name: 1, price: 1, image: 1 },
-  {}
-);
-
-// map create karo
-const productMap = new Map();
-products.forEach((p: any) => {
-  productMap.set(String(p._id), p);
-});
-
-// items me product attach karo
-enrichedOrder.items = enrichedOrder.items.map((item: any) => ({
-  ...item,
-  product: productMap.get(String(item.productId)) || null
-}));
-
-    return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.getDataSuccess("Order"), enrichedOrder, {}));
+    return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, "Order", normalizeOrderResponse(order), {}));
   } catch (error) {
-    console.log(error);
-    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.internalServerError, {}, error));
+    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, "Server error", {}, error));
   }
 };
 
 export const updateOrderShippingAddress = async (req, res) => {
   reqInfo(req);
   try {
-    const { error, value } = updateOrderShippingAddressSchema.validate(req.body || {});
-    if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
-
-    const orderId = isValidObjectId(value.orderId);
-    if (!orderId) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Order"), {}, {}));
-
-    const order = await getFirstMatch(orderModel, { _id: orderId, isDeleted: false }, {}, {});
-    if (!order) return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("Order"), {}, {}));
-
-    const authUser = req?.headers?.user as any;
-    if (authUser?._id && order?.userId && String(order.userId) !== String(authUser._id)) return res.status(HTTP_STATUS.UNAUTHORIZED).json(new apiResponse(HTTP_STATUS.UNAUTHORIZED, responseMessage.invalidToken, {}, {}));
-    
-
-    const normalizedShipping = normalizeShippingAddress(value.shippingAddress);
-    const updated = await updateData(orderModel, { _id: orderId }, { shippingAddress: normalizedShipping }, {});
-
-    return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.updateDataSuccess("Order"), updated, {}));
-  } catch (error) {
-    console.log(error);
-    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, responseMessage.internalServerError, {}, error));
-  }
-};
-
-const attachUserToOrder = async (order: any) => {
-  if (!order) return order;
-
-  let user = null;
-  if (order.userId) {
-    user = await getFirstMatch(userModel, { _id: order.userId, isDeleted: false }, userProjection, {});
-  } else {
-    const email = resolveOrderEmail(order);
-    if (email) {
-      user = await getFirstMatch(userModel, { email, isDeleted: false }, userProjection, {});
+    const { value, error } = updateOrderShippingAddressSchema.validate(req.body || {});
+    if (error) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.message, {}, {}));
     }
-  }
 
-  return { ...order, user: user || null };
+    const orderId = isValidObjectId(String(value.orderId));
+    if (!orderId) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, responseMessage.invalidId("Order"), {}, {}));
+    }
+
+    const updated = await updateData(orderModel, { _id: orderId }, { shippingAddress: normalizeShippingAddress(value.shippingAddress) }, {});
+
+    return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, "Updated", normalizeOrderResponse(updated), {}));
+  } catch (error) {
+    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(new apiResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, "Server error", {}, error));
+  }
 };
 
-const attachUsersToOrders = async (orders: any[]) => {
-  if (!orders?.length) return [];
-
-  const userIds = Array.from(new Set(orders.map((order) => order?.userId).filter(Boolean).map((id) => String(id))));
-  const emails = Array.from(new Set(orders.filter((order) => !order?.userId).map((order) => resolveOrderEmail(order)).filter(Boolean)));
-
-  const userById = new Map<string, any>();
-  const userByEmail = new Map<string, any>();
-
-  if (userIds.length > 0) {
-    const users = await getData(userModel, { _id: { $in: userIds }, isDeleted: false }, userProjection, {});
-    users.forEach((user: any) => {
-      userById.set(String(user?._id), user);
-    });
-  }
-
-  if (emails.length > 0) {
-    const users = await getData(userModel, { email: { $in: emails }, isDeleted: false }, userProjection, {});
-    users.forEach((user: any) => {
-      userByEmail.set(String(user?.email).toLowerCase(), user);
-    });
-  }
-
-  return orders.map((order) => {
-    const user = order?.userId
-      ? userById.get(String(order.userId))
-      : userByEmail.get(resolveOrderEmail(order));
-
-    return { ...order, user: user || null };
-  });
-};

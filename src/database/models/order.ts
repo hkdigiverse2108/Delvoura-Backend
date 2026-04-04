@@ -1,4 +1,4 @@
-﻿import mongoose from "mongoose";
+import mongoose from "mongoose";
 import { randomUUID } from "crypto";
 import type { Order } from "../../types";
 
@@ -27,6 +27,7 @@ const orderSchema = new mongoose.Schema<Order>(
     items: [
       {
         productId: { type: mongoose.Schema.Types.ObjectId, ref: "product", required: true },
+        productName: { type: String, default: "" },
         quantity: { type: Number, required: true },
         price: { type: Number, required: true },
       },
@@ -45,3 +46,4 @@ const orderSchema = new mongoose.Schema<Order>(
 );
 
 export const orderModel = mongoose.model<Order>("order", orderSchema, "order");
+

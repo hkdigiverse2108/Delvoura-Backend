@@ -19,6 +19,7 @@ export type Order = {
   }[];
   items: {
     productId: mongoose.Types.ObjectId;
+    productName?: string;
     quantity: number;
     price: number;
   }[];
@@ -32,3 +33,4 @@ export type Order = {
   orderStatus?: string;
   isDeleted?: boolean;
 };
+

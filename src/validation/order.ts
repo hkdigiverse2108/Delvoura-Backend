@@ -12,6 +12,7 @@ const shippingAddressSchema = Joi.object({
 
 const orderItemSchema = Joi.object({
   productId: Joi.string().required(),
+  productName: Joi.string().optional(),
   quantity: Joi.number().min(1).required(),
   price: Joi.number().required(),
 });
@@ -60,4 +61,5 @@ export const updateOrderShippingAddressSchema = Joi.object({
     .try(Joi.array().items(shippingAddressSchema).min(1), shippingAddressSchema)
     .required(),
 });
+
 
