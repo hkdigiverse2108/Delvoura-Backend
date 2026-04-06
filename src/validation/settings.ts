@@ -1,7 +1,7 @@
 import Joi from "joi";
 
 export const addEditSettingsSchema = Joi.object({
-  logo: Joi.string().optional(),
+ logo: Joi.string().allow(null, "").optional(),
   isRazorpay: Joi.boolean().optional(),
   razorpayApiKey: Joi.string().allow(null, "").optional(),
   razorpayApiSecret: Joi.string().allow(null, "").optional(),
