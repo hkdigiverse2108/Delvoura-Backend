@@ -1,6 +1,7 @@
 ﻿import { apiResponse, getPaginationState, HTTP_STATUS, isValidObjectId, resolvePagination, USER_ROLES } from "../../common";
 import { addressModel, orderModel, productModel, userModel } from "../../database";
 import { countData, createData, getData, getFirstMatch, reqInfo, responseMessage, updateData } from "../../helper";
+import { emitNewOrderNotification } from "../../socket";
 import { createOrderSchema, getOrderByIdSchema, getOrdersSchema, updateOrderShippingAddressSchema } from "../../validation";
 
 
@@ -125,6 +126,7 @@ export const createOrder = async (req, res) => {
 
     const order = await createOrderWithRetry(value);
     const normalizedOrder = normalizeOrderResponse(order?.toObject ? order.toObject() : order);
+    emitNewOrderNotification(normalizedOrder);
 
     return res.status(HTTP_STATUS.CREATED).json(new apiResponse(HTTP_STATUS.CREATED, "Order created", normalizedOrder, {}));
   } catch (error) {

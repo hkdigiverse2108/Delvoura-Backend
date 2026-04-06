@@ -6,6 +6,7 @@ import { mongooseConnection} from './database'
 import * as packageInfo from '../package.json'
 import { router } from './Routes'
 import path from 'path';
+import { initializeSocket } from './socket';
  
 const app = express();
 
@@ -38,4 +39,5 @@ app.use(router);
 app.all(/.*/, bad_gateway);
 
 let server = new http.Server(app);
+initializeSocket(server);
 export default server;
