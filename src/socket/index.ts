@@ -122,16 +122,8 @@ export const emitNewOrderNotification = (order: any) => {
     message: `${customerName || order?.email || "A customer"} placed order ${order?.orderId || ""}`.trim(),
     order,
     summary: {
-      id: order?._id || null,
       orderId: order?.orderId || null,
       customerName,
-      email: order?.email || null,
-      total: order?.total ?? 0,
-      currency: order?.currency || "INR",
-      paymentStatus: order?.paymentStatus || null,
-      orderStatus: order?.orderStatus || null,
-      itemCount,
-      createdAt: order?.createdAt || null,
     },
     createdAt: new Date().toISOString(),
   });
