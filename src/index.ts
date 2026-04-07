@@ -30,6 +30,9 @@ const bad_gateway = (_req, res) => { return res.status(502).json({ status: 502, 
 
 app.get('/', health);
 app.get('/health', health);
+app.get('/socket-test', (_req, res) => {
+    res.sendFile(path.join(process.cwd(), "public", "socket-test.html"));
+});
 app.get('/isServerUp', (_req, res) => {
     res.send('Server is running ');
 });

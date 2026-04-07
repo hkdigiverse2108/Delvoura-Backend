@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Delvoura Backend</title>
+  <style>
+    :root {
+      --ink: #1e1711;
+      --muted: #675d54;
+      --accent: #b85b31;
+      --accent-dark: #8f3f1d;
+      --surface: rgba(255, 255, 255, 0.86);
+      --line: rgba(30, 23, 17, 0.1);
+      --shadow: 0 24px 60px rgba(63, 34, 11, 0.16);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(184, 91, 49, 0.24), transparent 28%),
+        radial-gradient(circle at right, rgba(34, 102, 72, 0.14), transparent 24%),
+        linear-gradient(135deg, #f8f0e5 0%, #f0e0cd 100%);
+      display: grid;
+      place-items: center;
+      padding: 20px;
+    }
+
+    .card {
+      width: min(980px, 100%);
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      backdrop-filter: blur(16px);
+    }
+
+    .hero {
+      padding: 36px 32px 24px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(135deg, rgba(255, 248, 243, 0.92), rgba(255, 255, 255, 0.76));
+    }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(32px, 5vw, 54px);
+      line-height: 1;
+    }
+
+    .subtitle {
+      margin: 14px 0 0;
+      max-width: 680px;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.7;
+    }
+
+    .content {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 0;
+    }
+
+    .panel {
+      padding: 28px 32px 34px;
+    }
+
+    .panel + .panel {
+      border-left: 1px solid var(--line);
+    }
+
+    h2 {
+      margin: 0 0 14px;
+      font-size: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .links,
+    .notes {
+      display: grid;
+      gap: 14px;
+    }
+
+    a.tile {
+      display: block;
+      text-decoration: none;
+      color: inherit;
+      padding: 18px 18px 16px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.84);
+      border: 1px solid rgba(30, 23, 17, 0.08);
+      transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+    }
+
+    a.tile:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 28px rgba(63, 34, 11, 0.12);
+      border-color: rgba(184, 91, 49, 0.24);
+    }
+
+    .tile strong {
+      display: block;
+      font-size: 18px;
+      margin-bottom: 6px;
+    }
+
+    .tile span,
+    .notes p,
+    .notes li {
+      color: var(--muted);
+      line-height: 1.6;
+      font-size: 14px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 18px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.88);
+      border: 1px solid rgba(30, 23, 17, 0.08);
+    }
+
+    .badge::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+    }
+
+    ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    code {
+      padding: 2px 6px;
+      border-radius: 8px;
+      background: rgba(184, 91, 49, 0.08);
+      color: var(--accent-dark);
+    }
+
+    @media (max-width: 860px) {
+      .content {
+        grid-template-columns: 1fr;
+      }
+
+      .panel + .panel {
+        border-left: 0;
+        border-top: 1px solid var(--line);
+      }
+    }
+
+    @media (max-width: 560px) {
+      .hero,
+      .panel {
+        padding: 22px 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <section class="hero">
+      <p class="eyebrow">Backend Entry</p>
+      <h1>Delvoura backend pages</h1>
+      <p class="subtitle">
+        Ye lightweight static index page backend utilities tak quick access ke liye hai.
+        Agar aap socket testing kar rahe ho to niche se test console open kar sakte ho.
+      </p>
+      <div class="badge">Static file path: <code>/public/index.html</code></div>
+    </section>
+
+    <section class="content">
+      <div class="panel">
+        <h2>Quick Links</h2>
+        <div class="links">
+          <a class="tile" href="/socket.test">
+            <strong>Socket Test Page</strong>
+            <span>Connect, join room, aur realtime `order:new` events ko live inspect karo.</span>
+          </a>
+          <a class="tile" href="/health" target="_blank" rel="noreferrer">
+            <strong>Health Check</strong>
+            <span>Current backend metadata aur server health response dekhne ke liye.</span>
+          </a>
+          <a class="tile" href="/isServerUp" target="_blank" rel="noreferrer">
+            <strong>Server Up Check</strong>
+            <span>Simple plain-text confirmation endpoint.</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Notes</h2>
+        <div class="notes">
+          <p>Default route <code>/</code> abhi bhi backend health JSON return karta hai. Ye page static asset ke roop me serve ho raha hai.</p>
+          <ul>
+            <li>Open this file from backend via <code>/public/index.html</code>.</li>
+            <li>Socket testing ke liye recommended path <code>/socket-test</code> hai.</li>
+            <li>Agar chaho to next step me main <code>/</code> ko bhi HTML page par point kar sakta hoon.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

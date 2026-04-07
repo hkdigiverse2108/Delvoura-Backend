@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Socket Test</title>
+  <style>
+    :root {
+      --bg: #f4efe7;
+      --panel: rgba(255, 255, 255, 0.84);
+      --border: rgba(43, 31, 20, 0.12);
+      --text: #22160b;
+      --muted: #6f6357;
+      --accent: #b24c2f;
+      --accent-strong: #8e351d;
+      --success: #17633b;
+      --error: #a22c29;
+      --shadow: 0 20px 60px rgba(50, 29, 11, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(178, 76, 47, 0.18), transparent 28%),
+        radial-gradient(circle at top right, rgba(23, 99, 59, 0.14), transparent 24%),
+        linear-gradient(135deg, #f7f0e7 0%, #efe2d2 100%);
+      padding: 32px 18px;
+    }
+
+    .shell {
+      max-width: 1120px;
+      margin: 0 auto;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+      overflow: hidden;
+    }
+
+    .hero {
+      padding: 28px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(135deg, rgba(255, 248, 242, 0.92), rgba(255, 255, 255, 0.72));
+    }
+
+    .eyebrow {
+      font-size: 12px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 10px;
+      font-weight: 700;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: clamp(28px, 4vw, 42px);
+      line-height: 1.05;
+    }
+
+    .hero p {
+      margin: 0;
+      max-width: 760px;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(320px, 390px) minmax(0, 1fr);
+      gap: 0;
+    }
+
+    .sidebar,
+    .console {
+      padding: 24px;
+    }
+
+    .sidebar {
+      border-right: 1px solid var(--border);
+      background: rgba(255, 250, 244, 0.7);
+    }
+
+    .section + .section {
+      margin-top: 22px;
+    }
+
+    .section-title {
+      margin: 0 0 12px;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    input,
+    button,
+    textarea {
+      width: 100%;
+      font: inherit;
+      border-radius: 14px;
+    }
+
+    input,
+    textarea {
+      border: 1px solid rgba(43, 31, 20, 0.16);
+      background: rgba(255, 255, 255, 0.9);
+      color: var(--text);
+      padding: 12px 14px;
+      transition: border-color 0.16s ease, box-shadow 0.16s ease;
+    }
+
+    input:focus,
+    textarea:focus {
+      outline: none;
+      border-color: rgba(178, 76, 47, 0.55);
+      box-shadow: 0 0 0 4px rgba(178, 76, 47, 0.12);
+    }
+
+    .stack > * + * {
+      margin-top: 14px;
+    }
+
+    .button-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    button {
+      border: 0;
+      padding: 12px 14px;
+      cursor: pointer;
+      font-weight: 700;
+      color: #fff;
+      background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+      box-shadow: 0 10px 24px rgba(178, 76, 47, 0.28);
+      transition: transform 0.16s ease, box-shadow 0.16s ease, opacity 0.16s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 14px 28px rgba(178, 76, 47, 0.32);
+    }
+
+    button.secondary {
+      background: #fff;
+      color: var(--text);
+      border: 1px solid rgba(43, 31, 20, 0.12);
+      box-shadow: none;
+    }
+
+    button.secondary:hover {
+      box-shadow: none;
+    }
+
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .status-card {
+      padding: 14px;
+      border-radius: 18px;
+      background: rgba(255, 248, 241, 0.8);
+      border: 1px solid rgba(43, 31, 20, 0.08);
+    }
+
+    .status-card small {
+      display: block;
+      color: var(--muted);
+      margin-bottom: 6px;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .status-card strong {
+      display: block;
+      font-size: 16px;
+      overflow-wrap: anywhere;
+    }
+
+    .status-connected {
+      color: var(--success);
+    }
+
+    .status-error {
+      color: var(--error);
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .toolbar p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    #logs {
+      min-height: 420px;
+      resize: vertical;
+      background: #1f140d;
+      color: #f8e9d9;
+      border: 0;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+      margin-top: 10px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(43, 31, 20, 0.12);
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .pill::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    @media (max-width: 900px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        border-right: 0;
+        border-bottom: 1px solid var(--border);
+      }
+    }
+
+    @media (max-width: 560px) {
+      body {
+        padding: 14px;
+      }
+
+      .hero,
+      .sidebar,
+      .console {
+        padding: 18px;
+      }
+
+      .button-grid,
+      .status-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .toolbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="hero">
+      <div class="eyebrow">Realtime Inspector</div>
+      <h1>Socket.IO test page</h1>
+      <p>
+        Is page se aap backend socket connection check kar sakte ho, room join kar sakte ho,
+        aur `order:new` jaise realtime events ko live dekh sakte ho.
+      </p>
+    </div>
+
+    <div class="layout">
+      <aside class="sidebar">
+        <div class="section">
+          <div class="pill">Default room for admin notifications: <strong>all</strong></div>
+        </div>
+
+        <div class="section">
+          <h2 class="section-title">Connection</h2>
+          <div class="stack">
+            <div>
+              <label for="serverUrl">Server URL</label>
+              <input id="serverUrl" type="text" placeholder="http://localhost:3000">
+            </div>
+            <div class="button-grid">
+              <button id="connectBtn" type="button">Connect</button>
+              <button id="disconnectBtn" type="button" class="secondary">Disconnect</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <h2 class="section-title">Room Actions</h2>
+          <div class="stack">
+            <div>
+              <label for="roomId">Room ID</label>
+              <input id="roomId" type="text" value="all" placeholder="all">
+            </div>
+            <div class="button-grid">
+              <button id="joinAllBtn" type="button">Join All</button>
+              <button id="joinRoomBtn" type="button" class="secondary">Join Room</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <h2 class="section-title">Event Listener</h2>
+          <div class="stack">
+            <div>
+              <label for="eventName">Event Name</label>
+              <input id="eventName" type="text" value="order:new" placeholder="order:new">
+            </div>
+            <button id="listenBtn" type="button">Listen Event</button>
+            <p class="hint">
+              Suggested flow: connect karo, `Join All` dabao, phir new order create karo. Event payload neeche log hoga.
+            </p>
+          </div>
+        </div>
+      </aside>
+
+      <main class="console">
+        <div class="status-grid">
+          <div class="status-card">
+            <small>Status</small>
+            <strong id="statusText">Disconnected</strong>
+          </div>
+          <div class="status-card">
+            <small>Socket ID</small>
+            <strong id="socketIdText">-</strong>
+          </div>
+          <div class="status-card">
+            <small>Transport</small>
+            <strong id="transportText">-</strong>
+          </div>
+          <div class="status-card">
+            <small>Last Event</small>
+            <strong id="lastEventText">-</strong>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <p>Console logs with timestamps. Connection errors and event payloads dono yahan dikhenge.</p>
+          <button id="clearLogsBtn" type="button" class="secondary">Clear Logs</button>
+        </div>
+        <textarea id="logs" readonly spellcheck="false"></textarea>
+      </main>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const dom = {
+      serverUrl: document.getElementById("serverUrl"),
+      roomId: document.getElementById("roomId"),
+      eventName: document.getElementById("eventName"),
+      logs: document.getElementById("logs"),
+      statusText: document.getElementById("statusText"),
+      socketIdText: document.getElementById("socketIdText"),
+      transportText: document.getElementById("transportText"),
+      lastEventText: document.getElementById("lastEventText"),
+      connectBtn: document.getElementById("connectBtn"),
+      disconnectBtn: document.getElementById("disconnectBtn"),
+      joinAllBtn: document.getElementById("joinAllBtn"),
+      joinRoomBtn: document.getElementById("joinRoomBtn"),
+      listenBtn: document.getElementById("listenBtn"),
+      clearLogsBtn: document.getElementById("clearLogsBtn")
+    };
+
+    let socket = null;
+    const listeners = new Map();
+
+    dom.serverUrl.value = window.location.origin;
+
+    function formatPayload(payload) {
+      if (typeof payload === "string") return payload;
+      try {
+        return JSON.stringify(payload, null, 2);
+      } catch (error) {
+        return String(payload);
+      }
+    }
+
+    function appendLog(label, payload) {
+      const now = new Date().toLocaleTimeString();
+      const chunk = "[" + now + "] " + label + (payload !== undefined ? "\n" + formatPayload(payload) : "");
+      dom.logs.value = dom.logs.value ? dom.logs.value + "\n\n" + chunk : chunk;
+      dom.logs.scrollTop = dom.logs.scrollHeight;
+    }
+
+    function setStatus(text, type) {
+      dom.statusText.textContent = text;
+      dom.statusText.className = type === "error" ? "status-error" : type === "connected" ? "status-connected" : "";
+    }
+
+    function updateTransport() {
+      dom.transportText.textContent = socket && socket.io && socket.io.engine ? socket.io.engine.transport.name : "-";
+    }
+
+    function updateSocketMeta() {
+      dom.socketIdText.textContent = socket && socket.id ? socket.id : "-";
+      updateTransport();
+    }
+
+    function ensureSocket() {
+      if (!socket) {
+        appendLog("Socket not connected yet");
+        return false;
+      }
+      return true;
+    }
+
+    function subscribeToEvent(eventName) {
+      const name = String(eventName || "").trim();
+      if (!name) {
+        appendLog("Please enter an event name to listen");
+        return;
+      }
+
+      if (!ensureSocket()) return;
+
+      if (listeners.has(name)) {
+        appendLog("Already listening", { eventName: name });
+        return;
+      }
+
+      const handler = function (payload) {
+        dom.lastEventText.textContent = name;
+        appendLog("Event received: " + name, payload);
+      };
+
+      listeners.set(name, handler);
+      socket.on(name, handler);
+      appendLog("Listening started", { eventName: name });
+    }
+
+    function cleanupSocket() {
+      if (!socket) return;
+
+      listeners.forEach(function (handler, eventName) {
+        socket.off(eventName, handler);
+      });
+      listeners.clear();
+      socket.disconnect();
+      socket = null;
+      setStatus("Disconnected");
+      dom.socketIdText.textContent = "-";
+      dom.transportText.textContent = "-";
+    }
+
+    function connectSocket() {
+      const targetUrl = String(dom.serverUrl.value || window.location.origin).trim() || window.location.origin;
+
+      cleanupSocket();
+      appendLog("Connecting", { url: targetUrl });
+
+      socket = window.io(targetUrl, {
+        transports: ["websocket", "polling"]
+      });
+
+      socket.on("connect", function () {
+        setStatus("Connected", "connected");
+        updateSocketMeta();
+        appendLog("Connected", { socketId: socket.id });
+        subscribeToEvent(dom.eventName.value);
+      });
+
+      socket.on("disconnect", function (reason) {
+        setStatus("Disconnected");
+        updateSocketMeta();
+        appendLog("Disconnected", { reason: reason });
+      });
+
+      socket.on("connect_error", function (error) {
+        setStatus("Connection error", "error");
+        updateSocketMeta();
+        appendLog("Connection error", {
+          message: error && error.message ? error.message : String(error)
+        });
+      });
+
+      socket.io.on("reconnect_attempt", function (attempt) {
+        appendLog("Reconnect attempt", { attempt: attempt });
+      });
+
+      socket.io.on("error", function (error) {
+        appendLog("Manager error", error && error.message ? error.message : error);
+      });
+
+      socket.io.engine.on("upgrade", updateTransport);
+    }
+
+    dom.connectBtn.addEventListener("click", connectSocket);
+
+    dom.disconnectBtn.addEventListener("click", function () {
+      cleanupSocket();
+      appendLog("Disconnected by user");
+    });
+
+    dom.joinAllBtn.addEventListener("click", function () {
+      if (!ensureSocket()) return;
+      socket.emit("joinAll");
+      dom.roomId.value = "all";
+      appendLog("joinAll emitted");
+    });
+
+    dom.joinRoomBtn.addEventListener("click", function () {
+      if (!ensureSocket()) return;
+      const roomId = String(dom.roomId.value || "").trim();
+      if (!roomId) {
+        appendLog("Please enter roomId before joining a room");
+        return;
+      }
+      socket.emit("joinRoom", { roomId: roomId });
+      appendLog("joinRoom emitted", { roomId: roomId });
+    });
+
+    dom.listenBtn.addEventListener("click", function () {
+      subscribeToEvent(dom.eventName.value);
+    });
+
+    dom.clearLogsBtn.addEventListener("click", function () {
+      dom.logs.value = "";
+      dom.lastEventText.textContent = "-";
+    });
+  </script>
+</body>
+</html>
