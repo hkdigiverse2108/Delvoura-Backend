@@ -26,10 +26,18 @@ export const updateRating = async (req, res) => {
     const { error, value } = updateRatingSchema.validate(req.body || {});
     if (error) return res.status(HTTP_STATUS.BAD_REQUEST).json(new apiResponse(HTTP_STATUS.BAD_REQUEST, error.details[0].message, {}, {}));
 
+    if (value.productId) {
+      const product = await getFirstMatch(productModel, { _id: isValidObjectId(value.productId), isDeleted: false }, {}, {});
+      if (!product) return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("Product"), {}, {}));
+    }
+
     const existing = await getFirstMatch(ratingModel, { _id: isValidObjectId(value.ratingId), isDeleted: false }, {}, {});
     if (!existing) return res.status(HTTP_STATUS.NOT_FOUND).json(new apiResponse(HTTP_STATUS.NOT_FOUND, responseMessage.getDataNotFound("Rating"), {}, {}));
 
-    const updated = await updateData(ratingModel, { _id: isValidObjectId(value.ratingId) }, value, {});
+    const ratingId = value.ratingId;
+    delete value.ratingId;
+
+    const updated = await updateData(ratingModel, { _id: isValidObjectId(ratingId) }, value, {});
     return res.status(HTTP_STATUS.OK).json(new apiResponse(HTTP_STATUS.OK, responseMessage.updateDataSuccess("Rating"), updated, {}));
   } catch (error) {
     console.log(error);

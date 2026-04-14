@@ -11,6 +11,7 @@ export const createRatingSchema = Joi.object({
 
 export const updateRatingSchema = Joi.object({
   ratingId: Joi.string().required(),
+  productId: Joi.string().optional(),
   firstName: Joi.string().optional(),
   lastName: Joi.string().optional(),
   email: Joi.string().email().optional(),
